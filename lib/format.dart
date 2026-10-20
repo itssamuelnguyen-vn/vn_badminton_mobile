@@ -1,0 +1,36 @@
+import 'package:intl/intl.dart';
+
+/// The venue is in Vietnam (UTC+7, no daylight saving): times are shown in the venue's time whatever the
+/// phone's time zone.
+const venueOffset = Duration(hours: 7);
+
+DateTime venueTime(DateTime time) => time.toUtc().add(venueOffset);
+
+/// "2026-10-20T18:00:00+07:00", as the API expects.
+String venueIso(DateTime time) => '${DateFormat("yyyy-MM-dd'T'HH:mm:ss").format(venueTime(time))}+07:00';
+
+String hhmm(DateTime time) => DateFormat('HH:mm').format(venueTime(time));
+
+String timeRange(DateTime from, DateTime to) => '${hhmm(from)}–${hhmm(to)}';
+
+/// "T3, 20/10/2026" (vi) or "Tue, 20/10/2026" (en).
+String longDate(DateTime time, String locale) => DateFormat('EEE, dd/MM/yyyy', locale).format(venueTime(time));
+
+/// "T3 20/10" for a date the API gives as "2026-10-20".
+String dayLabel(String isoDate, String locale) {
+  final date = DateTime.parse(isoDate);
+  return DateFormat('EEE dd/MM', locale).format(date);
+}
+
+String vnd(int amount) => '${NumberFormat.decimalPattern('vi').format(amount)} đ';
+
+/// 40000 -> "40k", for the small price in the grid cells.
+String shortVnd(int amount) =>
+    amount >= 1000 && amount % 1000 == 0 ? '${amount ~/ 1000}k' : NumberFormat.decimalPattern('vi').format(amount);
+
+String countdown(Duration left) {
+  if (left.isNegative) return '00:00';
+  final minutes = left.inMinutes.toString().padLeft(2, '0');
+  final seconds = (left.inSeconds % 60).toString().padLeft(2, '0');
+  return '$minutes:$seconds';
+}
