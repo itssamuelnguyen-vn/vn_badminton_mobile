@@ -29,9 +29,9 @@ class HomeShellState extends State<HomeShell> {
   int _bookingsVisits = 0;
 
   void select(int index) => setState(() {
-        if (index == 1) _bookingsVisits++;
-        _index = index;
-      });
+    if (index == 1) _bookingsVisits++;
+    _index = index;
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -47,21 +47,31 @@ class HomeShellState extends State<HomeShell> {
           const AccountScreen(),
         ],
       ),
-      bottomNavigationBar: NavigationBar(
-        selectedIndex: _index,
-        onDestinationSelected: select,
-        destinations: [
-          NavigationDestination(
+      bottomNavigationBar: DecoratedBox(
+        decoration: const BoxDecoration(
+          boxShadow: [BoxShadow(color: Color(0x14065F46), blurRadius: 20, offset: Offset(0, -4))],
+        ),
+        child: NavigationBar(
+          selectedIndex: _index,
+          onDestinationSelected: select,
+          destinations: [
+            NavigationDestination(
               icon: const Icon(Icons.calendar_month_outlined),
-              selectedIcon: const Icon(Icons.calendar_month),
-              label: s.tabBook),
-          NavigationDestination(
+              selectedIcon: const Icon(Icons.calendar_month_rounded),
+              label: s.tabBook,
+            ),
+            NavigationDestination(
               icon: const Icon(Icons.receipt_long_outlined),
               selectedIcon: const Icon(Icons.receipt_long),
-              label: s.tabBookings),
-          NavigationDestination(
-              icon: const Icon(Icons.person_outline), selectedIcon: const Icon(Icons.person), label: s.tabAccount),
-        ],
+              label: s.tabBookings,
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.person_outline),
+              selectedIcon: const Icon(Icons.person_rounded),
+              label: s.tabAccount,
+            ),
+          ],
+        ),
       ),
     );
   }

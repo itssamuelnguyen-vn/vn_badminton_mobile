@@ -4,6 +4,7 @@ import '../app_state.dart';
 import '../format.dart';
 import '../models.dart';
 import '../strings.dart';
+import '../theme.dart';
 import '../widgets.dart';
 import 'auth_screens.dart';
 import 'booking_screen.dart';
@@ -64,66 +65,151 @@ class _BookingsScreenState extends State<BookingsScreen> {
     Widget body;
     if (!state.signedIn) {
       body = Center(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(mainAxisSize: MainAxisSize.min, children: [
-            Text(s.signInToSeeBookings, textAlign: TextAlign.center),
-            const SizedBox(height: 12),
-            FilledButton(onPressed: () => ensureSignedIn(context), child: Text(s.signIn)),
-          ]),
+        child: EmptyState(
+          icon: Icons.sports_tennis_rounded,
+          text: s.signInToSeeBookings,
+          action: SizedBox(
+            width: 220,
+            child: GradientButton(label: s.signIn, onPressed: () => ensureSignedIn(context)),
+          ),
         ),
       );
     } else if (!_loaded) {
-      body = _error != null ? ErrorView(message: s.error(_error!), onRetry: _load) : const Center(child: CircularProgressIndicator());
+      body = _error != null
+          ? ErrorView(message: s.error(_error!), onRetry: _load)
+          : const Center(child: CircularProgressIndicator());
     } else {
       body = RefreshIndicator(
         onRefresh: _load,
-        child: ListView(padding: const EdgeInsets.all(12), children: [
-          if (_awaiting.isEmpty && _upcoming.isEmpty && _past.isEmpty)
-            Padding(padding: const EdgeInsets.all(24), child: Text(s.noBookings, textAlign: TextAlign.center)),
-          if (_awaiting.isNotEmpty) _heading(s.awaitingPayment),
-          for (final payment in _awaiting)
-            Card(
-              color: Colors.amber.shade50,
-              child: ListTile(
-                leading: const Icon(Icons.qr_code_2),
-                title: Text('${payment.code} · ${vnd(payment.remainingVnd)}'),
-                subtitle: Text([
-                  for (final b in payment.bookings) '${b.court.name} ${timeRange(b.startsAt, b.endsAt)}',
-                  if (payment.expiresAt != null) s.payWithin(countdown(payment.expiresAt!.difference(DateTime.now()))),
-                ].join('\n')),
-                trailing: FilledButton(
-                  onPressed: () => _open(PaymentScreen(token: payment.token, initial: payment)),
-                  child: Text(s.payNow),
-                ),
-              ),
-            ),
-          if (_upcoming.isNotEmpty) _heading(s.upcoming),
-          for (final booking in _upcoming) _bookingTile(s, state.locale, booking),
-          if (_past.isNotEmpty) _heading(s.past),
-          for (final booking in _past) _bookingTile(s, state.locale, booking, past: true),
-        ]),
+        child: ListView(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+          children: [
+            if (_awaiting.isEmpty && _upcoming.isEmpty && _past.isEmpty)
+              EmptyState(icon: Icons.event_available_rounded, text: s.noBookings),
+            if (_awaiting.isNotEmpty) SectionTitle(s.awaitingPayment),
+            for (final payment in _awaiting) _paymentCard(s, payment),
+            if (_upcoming.isNotEmpty) SectionTitle(s.upcoming),
+            for (final booking in _upcoming) _bookingTile(s, state.locale, booking),
+            if (_past.isNotEmpty) SectionTitle(s.past),
+            for (final booking in _past) _bookingTile(s, state.locale, booking, past: true),
+          ],
+        ),
       );
     }
 
-    return Scaffold(appBar: AppBar(title: Text(s.tabBookings)), body: body);
+    return Scaffold(
+      body: Column(
+        children: [
+          GradientHeader(title: s.tabBookings, subtitle: s.bookingsSubtitle),
+          Expanded(child: body),
+        ],
+      ),
+    );
   }
 
-  Widget _heading(String text) => Padding(
-        padding: const EdgeInsets.fromLTRB(4, 12, 4, 4),
-        child: Text(text, style: Theme.of(context).textTheme.titleMedium),
-      );
-
-  Widget _bookingTile(S s, String locale, Booking booking, {bool past = false}) => Card(
-        color: past ? Colors.grey.shade100 : null,
-        child: ListTile(
-          leading: Icon(Icons.sports_tennis, color: past ? Colors.grey : null),
-          title: Text('${booking.court.name} · ${timeRange(booking.startsAt, booking.endsAt)}'),
-          subtitle: Text('${longDate(booking.startsAt, locale)}\n'
-              '${s.bookingStatus(booking.status)} · ${s.paymentStatus(booking.paymentStatus)}'),
-          isThreeLine: true,
-          trailing: const Icon(Icons.chevron_right),
-          onTap: () => _open(BookingScreen(booking: booking)),
+  Widget _paymentCard(S s, Payment payment) => Container(
+    margin: const EdgeInsets.symmetric(vertical: 6),
+    padding: const EdgeInsets.all(16),
+    decoration: BoxDecoration(
+      gradient: AppColors.payGradient,
+      borderRadius: BorderRadius.circular(22),
+      boxShadow: [
+        BoxShadow(color: AppColors.orange.withValues(alpha: 0.3), blurRadius: 20, offset: const Offset(0, 8)),
+      ],
+    ),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const Icon(Icons.qr_code_2_rounded, color: Colors.white, size: 28),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                payment.code,
+                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700, fontSize: 15),
+              ),
+            ),
+            Text(
+              vnd(payment.remainingVnd),
+              style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w800, fontSize: 18),
+            ),
+          ],
         ),
-      );
+        const SizedBox(height: 8),
+        for (final b in payment.bookings)
+          Text('${b.court.name} · ${timeRange(b.startsAt, b.endsAt)}', style: const TextStyle(color: Colors.white)),
+        const SizedBox(height: 12),
+        Row(
+          children: [
+            if (payment.expiresAt != null)
+              Expanded(
+                child: Row(
+                  children: [
+                    const Icon(Icons.timer_outlined, color: Colors.white, size: 18),
+                    const SizedBox(width: 4),
+                    Flexible(
+                      child: Text(
+                        s.payWithin(countdown(payment.expiresAt!.difference(DateTime.now()))),
+                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              const Spacer(),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: Colors.white,
+                foregroundColor: AppColors.orange,
+                minimumSize: const Size(0, 42),
+                padding: const EdgeInsets.symmetric(horizontal: 18),
+              ),
+              onPressed: () => _open(PaymentScreen(token: payment.token, initial: payment)),
+              child: Text(s.payNow),
+            ),
+          ],
+        ),
+      ],
+    ),
+  );
+
+  Widget _bookingTile(S s, String locale, Booking booking, {bool past = false}) => SoftCard(
+    padding: const EdgeInsets.all(12),
+    onTap: () => _open(BookingScreen(booking: booking)),
+    child: Row(
+      children: [
+        DateTile(booking.startsAt, locale, active: !past),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                '${booking.court.name} · ${timeRange(booking.startsAt, booking.endsAt)}',
+                style: TextStyle(
+                  fontWeight: FontWeight.w700,
+                  fontSize: 15,
+                  color: past ? AppColors.muted : AppColors.ink,
+                ),
+              ),
+              const SizedBox(height: 2),
+              Text(longDate(booking.startsAt, locale), style: const TextStyle(color: AppColors.muted, fontSize: 13)),
+              const SizedBox(height: 8),
+              Wrap(
+                spacing: 6,
+                runSpacing: 4,
+                children: [
+                  StatusPill(s.bookingStatus(booking.status), AppColors.bookingStatus(booking.status)),
+                  StatusPill(s.paymentStatus(booking.paymentStatus), AppColors.paymentStatus(booking.paymentStatus)),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const Icon(Icons.chevron_right_rounded, color: AppColors.muted),
+      ],
+    ),
+  );
 }

@@ -60,35 +60,49 @@ class _SignInScreenState extends State<SignInScreen> {
     String? required(String? value) => (value ?? '').trim().isEmpty ? s.required : null;
 
     return Scaffold(
-      appBar: AppBar(title: Text(s.signIn)),
       body: Form(
         key: _form,
-        child: ListView(padding: const EdgeInsets.all(20), children: [
-          TextFormField(
-            controller: _login,
-            decoration: InputDecoration(labelText: s.login),
-            keyboardType: TextInputType.emailAddress,
-            autofillHints: const [AutofillHints.email, AutofillHints.telephoneNumber],
-            validator: required,
-          ),
-          const SizedBox(height: 16),
-          TextFormField(
-            controller: _password,
-            decoration: InputDecoration(labelText: s.password),
-            obscureText: true,
-            autofillHints: const [AutofillHints.password],
-            validator: required,
-            onFieldSubmitted: (_) => _submit(),
-          ),
-          if (_error != null) ...[
-            const SizedBox(height: 16),
-            Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            GradientHeader(title: s.signIn, subtitle: s.welcomeText, actions: const [_Logo()]),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextFormField(
+                    controller: _login,
+                    decoration: InputDecoration(
+                      labelText: s.login,
+                      prefixIcon: const Icon(Icons.alternate_email_rounded),
+                    ),
+                    keyboardType: TextInputType.emailAddress,
+                    autofillHints: const [AutofillHints.email, AutofillHints.telephoneNumber],
+                    validator: required,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _password,
+                    decoration: InputDecoration(labelText: s.password, prefixIcon: const Icon(Icons.lock_rounded)),
+                    obscureText: true,
+                    autofillHints: const [AutofillHints.password],
+                    validator: required,
+                    onFieldSubmitted: (_) => _submit(),
+                  ),
+                  if (_error != null) ...[
+                    const SizedBox(height: 16),
+                    Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                  ],
+                  const SizedBox(height: 24),
+                  GradientButton(label: s.signIn, busy: _busy, onPressed: _submit),
+                  const SizedBox(height: 8),
+                  TextButton(onPressed: _busy ? null : _signUp, child: Text(s.noAccount)),
+                ],
+              ),
+            ),
           ],
-          const SizedBox(height: 24),
-          FilledButton(onPressed: _busy ? null : _submit, child: Text(s.signIn)),
-          const SizedBox(height: 8),
-          TextButton(onPressed: _busy ? null : _signUp, child: Text(s.noAccount)),
-        ]),
+        ),
       ),
     );
   }
@@ -128,12 +142,8 @@ class _SignUpScreenState extends State<SignUpScreen> {
       _error = null;
     });
     try {
-      await AppScope.read(context).register(
-        fullName: _fullName.text,
-        phone: _phone.text,
-        email: _email.text,
-        password: _password.text,
-      );
+      await AppScope.read(context)
+          .register(fullName: _fullName.text, phone: _phone.text, email: _email.text, password: _password.text);
       if (!mounted) return;
       showMessage(context, s.verificationSent);
       Navigator.of(context).pop(true);
@@ -150,61 +160,89 @@ class _SignUpScreenState extends State<SignUpScreen> {
     String? required(String? value) => (value ?? '').trim().isEmpty ? s.required : null;
 
     return Scaffold(
-      appBar: AppBar(title: Text(s.signUp)),
       body: Form(
         key: _form,
-        child: ListView(padding: const EdgeInsets.all(20), children: [
-          TextFormField(
-            controller: _fullName,
-            decoration: InputDecoration(labelText: s.fullName),
-            textCapitalization: TextCapitalization.words,
-            autofillHints: const [AutofillHints.name],
-            validator: required,
-          ),
-          const SizedBox(height: 16),
-          TextFormField(
-            controller: _phone,
-            decoration: InputDecoration(labelText: s.phone),
-            keyboardType: TextInputType.phone,
-            autofillHints: const [AutofillHints.telephoneNumber],
-            validator: required,
-          ),
-          const SizedBox(height: 16),
-          TextFormField(
-            controller: _email,
-            decoration: InputDecoration(labelText: s.email),
-            keyboardType: TextInputType.emailAddress,
-            autofillHints: const [AutofillHints.email],
-            validator: required,
-          ),
-          const SizedBox(height: 16),
-          TextFormField(
-            controller: _password,
-            decoration: InputDecoration(labelText: s.password, helperText: s.passwordHint),
-            obscureText: true,
-            autofillHints: const [AutofillHints.newPassword],
-            validator: required,
-          ),
-          const SizedBox(height: 8),
-          CheckboxListTile(
-            value: _consent,
-            onChanged: (value) => setState(() => _consent = value ?? false),
-            title: Text(s.privacyConsent),
-            controlAffinity: ListTileControlAffinity.leading,
-            contentPadding: EdgeInsets.zero,
-          ),
-          Align(
-            alignment: Alignment.centerLeft,
-            child: TextButton(onPressed: () => openLink('$apiUrl/privacy'), child: Text(s.readPrivacy)),
-          ),
-          if (_error != null) ...[
-            const SizedBox(height: 8),
-            Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            GradientHeader(title: s.signUp, subtitle: s.welcomeText, actions: const [_Logo()]),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextFormField(
+                    controller: _fullName,
+                    decoration: InputDecoration(labelText: s.fullName, prefixIcon: const Icon(Icons.person_rounded)),
+                    textCapitalization: TextCapitalization.words,
+                    autofillHints: const [AutofillHints.name],
+                    validator: required,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _phone,
+                    decoration: InputDecoration(labelText: s.phone, prefixIcon: const Icon(Icons.phone_rounded)),
+                    keyboardType: TextInputType.phone,
+                    autofillHints: const [AutofillHints.telephoneNumber],
+                    validator: required,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _email,
+                    decoration: InputDecoration(labelText: s.email, prefixIcon: const Icon(Icons.email_rounded)),
+                    keyboardType: TextInputType.emailAddress,
+                    autofillHints: const [AutofillHints.email],
+                    validator: required,
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _password,
+                    decoration: InputDecoration(
+                      labelText: s.password,
+                      helperText: s.passwordHint,
+                      prefixIcon: const Icon(Icons.lock_rounded),
+                    ),
+                    obscureText: true,
+                    autofillHints: const [AutofillHints.newPassword],
+                    validator: required,
+                  ),
+                  const SizedBox(height: 8),
+                  CheckboxListTile(
+                    value: _consent,
+                    onChanged: (value) => setState(() => _consent = value ?? false),
+                    title: Text(s.privacyConsent),
+                    controlAffinity: ListTileControlAffinity.leading,
+                    contentPadding: EdgeInsets.zero,
+                  ),
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: TextButton(onPressed: () => openLink('$apiUrl/privacy'), child: Text(s.readPrivacy)),
+                  ),
+                  if (_error != null) ...[
+                    const SizedBox(height: 8),
+                    Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                  ],
+                  const SizedBox(height: 16),
+                  GradientButton(label: s.signUp, busy: _busy, onPressed: _submit),
+                ],
+              ),
+            ),
           ],
-          const SizedBox(height: 16),
-          FilledButton(onPressed: _busy ? null : _submit, child: Text(s.signUp)),
-        ]),
+        ),
       ),
     );
   }
+}
+
+/// The venue's logo on a white circle, in the corner of the sign-in header.
+class _Logo extends StatelessWidget {
+  const _Logo();
+
+  @override
+  Widget build(BuildContext context) => Container(
+    margin: const EdgeInsets.only(right: 8),
+    padding: const EdgeInsets.all(6),
+    decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.white),
+    child: Image.asset('assets/logo.png', width: 48, height: 48),
+  );
 }

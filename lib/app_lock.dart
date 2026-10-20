@@ -3,6 +3,7 @@ import 'package:local_auth/local_auth.dart';
 
 import 'app_state.dart';
 import 'strings.dart';
+import 'theme.dart';
 
 /// Asks for the fingerprint, the face or the screen lock when the app opens, and again when it comes back
 /// after a few minutes in the background, if the customer turned it on in Settings.
@@ -84,14 +85,36 @@ class _AppLockState extends State<AppLock> with WidgetsBindingObserver {
     if (!_locked) return widget.child;
     final s = S.of(context);
     return Scaffold(
-      body: Center(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          Icon(Icons.lock_outline, size: 56, color: Theme.of(context).colorScheme.primary),
-          const SizedBox(height: 12),
-          Text(s.locked, style: Theme.of(context).textTheme.titleMedium),
-          const SizedBox(height: 16),
-          FilledButton.icon(icon: const Icon(Icons.fingerprint), label: Text(s.unlock), onPressed: _unlock),
-        ]),
+      body: Container(
+        decoration: const BoxDecoration(gradient: AppColors.brandGradient),
+        child: Center(
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: const BoxDecoration(shape: BoxShape.circle, color: Colors.white),
+                child: Image.asset('assets/logo.png', width: 72, height: 72),
+              ),
+              const SizedBox(height: 20),
+              Text(
+                s.locked,
+                style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.w700),
+              ),
+              const SizedBox(height: 24),
+              FilledButton.icon(
+                style: FilledButton.styleFrom(
+                  backgroundColor: AppColors.lime,
+                  foregroundColor: AppColors.ink,
+                  minimumSize: const Size(200, 52),
+                ),
+                icon: const Icon(Icons.fingerprint_rounded),
+                label: Text(s.unlock),
+                onPressed: _unlock,
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

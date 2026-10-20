@@ -18,6 +18,14 @@ class S {
   String get tabBookings => _('Sân đã đặt', 'My bookings');
   String get tabAccount => _('Tài khoản', 'Account');
 
+  // Headers
+  String hello(String name) => _('Xin chào, $name 👋', 'Hi, $name 👋');
+  String get readyToPlay => _('Hôm nay ra sân nhé?', 'Ready to play today?');
+  String get bookingsSubtitle => _('Lịch chơi và thanh toán của bạn', 'Your games and payments');
+  String get welcome => _('Chào mừng bạn!', 'Welcome!');
+  String get welcomeText => _('Đăng nhập để đặt sân, thanh toán và theo dõi lịch chơi.',
+      'Sign in to book courts, pay and keep track of your games.');
+
   // Common
   String get retry => _('Thử lại', 'Retry');
   String get cancel => _('Huỷ', 'Cancel');

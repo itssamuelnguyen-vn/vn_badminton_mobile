@@ -6,6 +6,7 @@ import '../api.dart';
 import '../app_state.dart';
 import '../models.dart';
 import '../strings.dart';
+import '../theme.dart';
 import '../widgets.dart';
 
 /// The round profile photo, or the initial of the name without one.
@@ -21,9 +22,12 @@ class Avatar extends StatelessWidget {
     final initial = user.fullName.trim().isEmpty ? '?' : user.fullName.trim().characters.first.toUpperCase();
     return CircleAvatar(
       radius: radius,
-      backgroundColor: Theme.of(context).colorScheme.primaryContainer,
+      backgroundColor: AppColors.mint,
       foregroundImage: path == null ? null : NetworkImage(serverUrl(path)),
-      child: Text(initial, style: TextStyle(fontSize: radius * 0.8, fontWeight: FontWeight.w600)),
+      child: Text(
+        initial,
+        style: TextStyle(fontSize: radius * 0.8, fontWeight: FontWeight.w800, color: AppColors.primaryDark),
+      ),
     );
   }
 }
@@ -87,12 +91,27 @@ class _ProfileScreenState extends State<ProfileScreen> {
     final choice = await showModalBottomSheet<String>(
       context: context,
       builder: (context) => SafeArea(
-        child: Column(mainAxisSize: MainAxisSize.min, children: [
-          ListTile(leading: const Icon(Icons.photo_camera), title: Text(s.takePhoto), onTap: () => Navigator.pop(context, 'camera')),
-          ListTile(leading: const Icon(Icons.photo_library), title: Text(s.choosePhoto), onTap: () => Navigator.pop(context, 'gallery')),
-          if (state.user?.avatarPath != null)
-            ListTile(leading: const Icon(Icons.delete_outline), title: Text(s.removePhoto), onTap: () => Navigator.pop(context, 'remove')),
-        ]),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            ListTile(
+              leading: const Icon(Icons.photo_camera),
+              title: Text(s.takePhoto),
+              onTap: () => Navigator.pop(context, 'camera'),
+            ),
+            ListTile(
+              leading: const Icon(Icons.photo_library),
+              title: Text(s.choosePhoto),
+              onTap: () => Navigator.pop(context, 'gallery'),
+            ),
+            if (state.user?.avatarPath != null)
+              ListTile(
+                leading: const Icon(Icons.delete_outline),
+                title: Text(s.removePhoto),
+                onTap: () => Navigator.pop(context, 'remove'),
+              ),
+          ],
+        ),
       ),
     );
     if (choice == null || !mounted) return;
@@ -127,84 +146,160 @@ class _ProfileScreenState extends State<ProfileScreen> {
     if (user == null) return const SizedBox.shrink();
     String? required(String? value) => (value ?? '').trim().isEmpty ? s.required : null;
 
+    Widget choices(
+      String label,
+      List<String> values,
+      String? selected,
+      String Function(String) text,
+      Color Function(String) color,
+      ValueChanged<String?> onSelected,
+    ) => Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(label, style: const TextStyle(fontWeight: FontWeight.w700)),
+        const SizedBox(height: 8),
+        Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            for (final value in [null, ...values])
+              ChoiceChip(
+                label: Text(value == null ? s.notSet : text(value)),
+                selected: selected == value,
+                showCheckmark: false,
+                selectedColor: value == null ? AppColors.muted : color(value),
+                labelStyle: TextStyle(
+                  fontWeight: FontWeight.w600,
+                  color: selected == value ? Colors.white : AppColors.ink,
+                ),
+                side: selected == value ? BorderSide.none : null,
+                onSelected: (_) => onSelected(value),
+              ),
+          ],
+        ),
+      ],
+    );
+
     return Scaffold(
-      appBar: AppBar(title: Text(s.profile)),
       body: Form(
         key: _form,
-        child: ListView(padding: const EdgeInsets.all(20), children: [
-          Center(
-            child: Stack(children: [
-              Avatar(user: user, radius: 52),
-              Positioned(
-                right: 0,
-                bottom: 0,
-                child: IconButton.filled(
-                  icon: _uploading
-                      ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white))
-                      : const Icon(Icons.photo_camera, size: 20),
-                  onPressed: _uploading ? null : _changePhoto,
+        child: ListView(
+          padding: EdgeInsets.zero,
+          children: [
+            GradientHeader(
+              title: s.profile,
+              child: Center(
+                child: Column(
+                  children: [
+                    Stack(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: BoxDecoration(shape: BoxShape.circle, color: Colors.white.withValues(alpha: 0.5)),
+                          child: Avatar(user: user, radius: 52),
+                        ),
+                        Positioned(
+                          right: 0,
+                          bottom: 0,
+                          child: IconButton.filled(
+                            style: IconButton.styleFrom(
+                              backgroundColor: AppColors.lime,
+                              foregroundColor: AppColors.ink,
+                            ),
+                            icon: _uploading
+                                ? const SizedBox(
+                                    width: 18,
+                                    height: 18,
+                                    child: CircularProgressIndicator(strokeWidth: 2, color: AppColors.ink),
+                                  )
+                                : const Icon(Icons.photo_camera_rounded, size: 20),
+                            onPressed: _uploading ? null : _changePhoto,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Text(user.email, style: TextStyle(color: Colors.white.withValues(alpha: 0.85))),
+                  ],
                 ),
               ),
-            ]),
-          ),
-          const SizedBox(height: 8),
-          Text(user.email, textAlign: TextAlign.center, style: TextStyle(color: Theme.of(context).hintColor)),
-          const SizedBox(height: 24),
-          TextFormField(
-            controller: _fullName,
-            decoration: InputDecoration(labelText: s.fullName),
-            textCapitalization: TextCapitalization.words,
-            validator: required,
-          ),
-          const SizedBox(height: 16),
-          TextFormField(
-            controller: _phone,
-            decoration: InputDecoration(labelText: s.phone),
-            keyboardType: TextInputType.phone,
-            validator: required,
-          ),
-          const SizedBox(height: 24),
-          Text(s.profileHint, style: TextStyle(color: Theme.of(context).hintColor)),
-          const SizedBox(height: 16),
-          TextFormField(
-            controller: _birthYear,
-            decoration: InputDecoration(labelText: s.birthYear),
-            keyboardType: TextInputType.number,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(4)],
-            validator: (value) {
-              if ((value ?? '').isEmpty) return null;
-              final year = int.tryParse(value!);
-              return year == null || year < 1900 || year > DateTime.now().year ? s.invalidYear : null;
-            },
-          ),
-          const SizedBox(height: 16),
-          DropdownButtonFormField<String?>(
-            initialValue: _gender,
-            decoration: InputDecoration(labelText: s.gender),
-            items: [
-              DropdownMenuItem(value: null, child: Text(s.notSet)),
-              for (final value in ['male', 'female', 'other']) DropdownMenuItem(value: value, child: Text(s.genderLabel(value))),
-            ],
-            onChanged: (value) => setState(() => _gender = value),
-          ),
-          const SizedBox(height: 16),
-          DropdownButtonFormField<String?>(
-            initialValue: _skillLevel,
-            decoration: InputDecoration(labelText: s.skillLevel),
-            items: [
-              DropdownMenuItem(value: null, child: Text(s.notSet)),
-              for (final value in ['beginner', 'intermediate', 'advanced', 'expert'])
-                DropdownMenuItem(value: value, child: Text(s.skillLabel(value))),
-            ],
-            onChanged: (value) => setState(() => _skillLevel = value),
-          ),
-          if (_error != null) ...[
-            const SizedBox(height: 16),
-            Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  TextFormField(
+                    controller: _fullName,
+                    decoration: InputDecoration(labelText: s.fullName, prefixIcon: const Icon(Icons.person_rounded)),
+                    textCapitalization: TextCapitalization.words,
+                    validator: required,
+                  ),
+                  const SizedBox(height: 14),
+                  TextFormField(
+                    controller: _phone,
+                    decoration: InputDecoration(labelText: s.phone, prefixIcon: const Icon(Icons.phone_rounded)),
+                    keyboardType: TextInputType.phone,
+                    validator: required,
+                  ),
+                  const SizedBox(height: 20),
+                  Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(color: AppColors.mint, borderRadius: BorderRadius.circular(14)),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.lock_outline_rounded, color: AppColors.primaryDark, size: 20),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            s.profileHint,
+                            style: const TextStyle(color: AppColors.primaryDark, fontSize: 13),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  TextFormField(
+                    controller: _birthYear,
+                    decoration: InputDecoration(labelText: s.birthYear, prefixIcon: const Icon(Icons.cake_rounded)),
+                    keyboardType: TextInputType.number,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly, LengthLimitingTextInputFormatter(4)],
+                    validator: (value) {
+                      if ((value ?? '').isEmpty) return null;
+                      final year = int.tryParse(value!);
+                      return year == null || year < 1900 || year > DateTime.now().year ? s.invalidYear : null;
+                    },
+                  ),
+                  const SizedBox(height: 20),
+                  choices(
+                    s.gender,
+                    const ['male', 'female', 'other'],
+                    _gender,
+                    s.genderLabel,
+                    (_) => AppColors.primary,
+                    (value) => setState(() => _gender = value),
+                  ),
+                  const SizedBox(height: 20),
+                  choices(
+                    s.skillLevel,
+                    const ['beginner', 'intermediate', 'advanced', 'expert'],
+                    _skillLevel,
+                    s.skillLabel,
+                    AppColors.skill,
+                    (value) => setState(() => _skillLevel = value),
+                  ),
+                  if (_error != null) ...[
+                    const SizedBox(height: 16),
+                    Text(_error!, style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                  ],
+                  const SizedBox(height: 28),
+                  GradientButton(label: s.save, icon: Icons.check_rounded, busy: _busy, onPressed: _save),
+                ],
+              ),
+            ),
           ],
-          const SizedBox(height: 24),
-          FilledButton(onPressed: _busy ? null : _save, child: Text(s.save)),
-        ]),
+        ),
       ),
     );
   }

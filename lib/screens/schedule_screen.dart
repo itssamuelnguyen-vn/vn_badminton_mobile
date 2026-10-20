@@ -5,6 +5,7 @@ import '../app_state.dart';
 import '../format.dart';
 import '../models.dart';
 import '../strings.dart';
+import '../theme.dart';
 import '../widgets.dart';
 import 'auth_screens.dart';
 import 'confirm_screen.dart';
@@ -21,6 +22,7 @@ class ScheduleScreen extends StatefulWidget {
 class _ScheduleScreenState extends State<ScheduleScreen> {
   static const _cellWidth = 64.0;
   static const _cellHeight = 44.0;
+  static const _gap = 4.0;
   static const _timeWidth = 52.0;
 
   final _headerScroll = ScrollController();
@@ -69,7 +71,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       _error = null;
     });
     try {
-      final json = await AppScope.read(context).api.get('/schedule', query: {if ((date ?? _date) != null) 'date': (date ?? _date)!});
+      final json = await AppScope.read(context).api
+          .get('/schedule', query: {if ((date ?? _date) != null) 'date': (date ?? _date)!});
       final day = ScheduleDay.fromJson(json);
       if (!mounted) return;
       setState(() {
@@ -151,7 +154,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       final hold = await state.api.post('/hold', {'slots': slots});
       if (!mounted) return;
       final booked = await Navigator.of(context).push<bool>(
-        MaterialPageRoute(builder: (_) => ConfirmScreen(hold: hold as Map<String, dynamic>, slots: slots)),
+        MaterialPageRoute(
+          builder: (_) => ConfirmScreen(hold: hold as Map<String, dynamic>, slots: slots),
+        ),
       );
       if (booked == true) _picked.clear();
       if (mounted) _load(keepPicked: true);
@@ -189,149 +194,266 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     final s = S.of(context);
     final state = AppScope.of(context);
     final day = _day;
+    final user = state.user;
+    final firstName = user?.fullName.trim().split(RegExp(r'\s+')).last ?? '';
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(state.venue?.name ?? 'VN Badminton'),
-        actions: [
-          IconButton(icon: const Icon(Icons.refresh), onPressed: _loading ? null : () => _load(keepPicked: true)),
+      body: Column(
+        children: [
+          GradientHeader(
+            title: firstName.isEmpty ? (state.venue?.name ?? 'VN Badminton') : s.hello(firstName),
+            subtitle: s.readyToPlay,
+            bottomPadding: 18,
+            actions: [
+              _loading
+                  ? const Padding(
+                      padding: EdgeInsets.all(14),
+                      child: SizedBox(
+                        width: 20,
+                        height: 20,
+                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                      ),
+                    )
+                  : IconButton(
+                      icon: const Icon(Icons.refresh_rounded, color: Colors.white),
+                      onPressed: () => _load(keepPicked: true),
+                    ),
+            ],
+            child: day == null ? null : _dates(day, state.locale),
+          ),
+          Expanded(
+            child: day == null
+                ? (_error != null
+                      ? ErrorView(message: s.error(_error!), onRetry: _load)
+                      : const Center(child: CircularProgressIndicator()))
+                : Column(
+                    children: [
+                      _legend(s),
+                      Expanded(child: day.times.isEmpty ? Center(child: Text(s.noSlots)) : _grid(day)),
+                      if (_picked.isNotEmpty) _summary(s, state),
+                    ],
+                  ),
+          ),
         ],
-        bottom: _loading ? const PreferredSize(preferredSize: Size.fromHeight(2), child: LinearProgressIndicator(minHeight: 2)) : null,
       ),
-      body: day == null
-          ? (_error != null
-              ? ErrorView(message: s.error(_error!), onRetry: _load)
-              : const Center(child: CircularProgressIndicator()))
-          : Column(children: [
-              _dates(day, state.locale),
-              _legend(s),
-              const Divider(height: 1),
-              Expanded(child: day.times.isEmpty ? Center(child: Text(s.noSlots)) : _grid(day)),
-              if (_picked.isNotEmpty) _summary(s, state),
-            ]),
     );
   }
 
   Widget _dates(ScheduleDay day, String locale) => SizedBox(
-        height: 64,
-        child: ListView(
-          scrollDirection: Axis.horizontal,
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-          children: [
-            for (final date in day.dates)
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: ChoiceChip(
-                  label: Text(dayLabel(date, locale)),
-                  selected: date == day.date,
-                  showCheckmark: false,
-                  onSelected: (_) => _load(date: date),
+    height: 70,
+    child: ListView.separated(
+      scrollDirection: Axis.horizontal,
+      padding: const EdgeInsets.only(right: 12),
+      itemCount: day.dates.length,
+      separatorBuilder: (_, _) => const SizedBox(width: 8),
+      itemBuilder: (context, i) {
+        final date = day.dates[i];
+        final selected = date == day.date;
+        final color = selected ? AppColors.primaryDark : Colors.white;
+        return GestureDetector(
+          onTap: () => _load(date: date),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            width: 58,
+            decoration: BoxDecoration(
+              color: selected ? Colors.white : Colors.white.withValues(alpha: 0.15),
+              borderRadius: BorderRadius.circular(18),
+              boxShadow: selected
+                  ? const [BoxShadow(color: Color(0x33000000), blurRadius: 12, offset: Offset(0, 4))]
+                  : null,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Text(
+                  weekdayShort(date, locale),
+                  style: TextStyle(
+                    color: color.withValues(alpha: selected ? 1 : 0.85),
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-          ],
-        ),
-      );
+                const SizedBox(height: 2),
+                Text(
+                  dayOfMonth(date),
+                  style: TextStyle(color: color, fontSize: 22, fontWeight: FontWeight.w800, height: 1.1),
+                ),
+              ],
+            ),
+          ),
+        );
+      },
+    ),
+  );
 
   Widget _legend(S s) {
-    Widget item(Color color, String label, {Color? border}) => Padding(
-          padding: const EdgeInsets.only(right: 12),
-          child: Row(mainAxisSize: MainAxisSize.min, children: [
-            Container(
-              width: 14,
-              height: 14,
-              decoration: BoxDecoration(
-                  color: color, border: Border.all(color: border ?? color), borderRadius: BorderRadius.circular(3)),
-            ),
-            const SizedBox(width: 4),
-            Text(label, style: const TextStyle(fontSize: 12)),
-          ]),
-        );
-    final scheme = Theme.of(context).colorScheme;
+    Widget item(Color color, String label, {Gradient? gradient, Color? border}) => Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 14,
+          height: 14,
+          decoration: BoxDecoration(
+            color: color,
+            gradient: gradient,
+            border: border == null ? null : Border.all(color: border, width: 1.5),
+            borderRadius: BorderRadius.circular(5),
+          ),
+        ),
+        const SizedBox(width: 5),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: AppColors.muted),
+        ),
+      ],
+    );
     return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 0, 12, 8),
-      child: Wrap(runSpacing: 4, children: [
-        item(Colors.white, s.legendFree, border: Colors.grey.shade400),
-        item(scheme.primary, s.legendPicked),
-        item(Colors.blue.shade200, s.legendMine),
-        item(Colors.amber.shade200, s.legendHeld),
-        item(Colors.grey.shade300, s.legendTaken),
-      ]),
+      padding: const EdgeInsets.fromLTRB(16, 14, 16, 8),
+      child: Wrap(
+        spacing: 14,
+        runSpacing: 6,
+        children: [
+          item(Colors.white, s.legendFree, border: AppColors.line),
+          item(AppColors.primary, s.legendPicked, gradient: AppColors.brandGradient),
+          item(_mine, s.legendMine),
+          item(_held, s.legendHeld),
+          item(_taken, s.legendTaken),
+        ],
+      ),
     );
   }
 
+  static const _mine = Color(0xFFE0E7FF);
+  static const _held = Color(0xFFFEF3C7);
+  static const _taken = Color(0xFFE6ECE9);
+
   Widget _grid(ScheduleDay day) {
-    final header = Row(children: [
-      const SizedBox(width: _timeWidth),
-      Expanded(
-        child: SingleChildScrollView(
-          controller: _headerScroll,
-          scrollDirection: Axis.horizontal,
-          physics: const NeverScrollableScrollPhysics(),
-          child: Row(children: [
-            for (final court in day.courts)
-              SizedBox(
-                width: _cellWidth,
-                height: 32,
-                child: Center(child: Text(court.name, style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13))),
-              ),
-          ]),
+    final header = Row(
+      children: [
+        const SizedBox(width: _timeWidth),
+        Expanded(
+          child: SingleChildScrollView(
+            controller: _headerScroll,
+            scrollDirection: Axis.horizontal,
+            physics: const NeverScrollableScrollPhysics(),
+            child: Row(
+              children: [
+                for (final court in day.courts)
+                  Container(
+                    width: _cellWidth,
+                    height: 30,
+                    margin: const EdgeInsets.all(_gap / 2),
+                    decoration: BoxDecoration(color: AppColors.mint, borderRadius: BorderRadius.circular(10)),
+                    alignment: Alignment.center,
+                    child: Text(
+                      court.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 12, color: AppColors.primaryDark),
+                    ),
+                  ),
+              ],
+            ),
+          ),
         ),
-      ),
-    ]);
+      ],
+    );
 
     final body = RefreshIndicator(
       onRefresh: () => _load(keepPicked: true),
       child: SingleChildScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
-        child: Row(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Column(children: [
-            for (final time in day.times)
-              SizedBox(
-                width: _timeWidth,
-                height: _cellHeight,
-                child: Center(child: Text(hhmm(time), style: const TextStyle(fontSize: 12))),
-              ),
-          ]),
-          Expanded(
-            child: SingleChildScrollView(
-              controller: _bodyScroll,
-              scrollDirection: Axis.horizontal,
-              child: Row(children: [
-                for (final court in day.courts)
-                  Column(children: [
-                    for (final (i, slot) in (day.slots[court.id] ?? const <Slot>[]).indexed) _cell(court.id, i, slot),
-                  ]),
-              ]),
+        padding: const EdgeInsets.only(bottom: 12),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Column(
+              children: [
+                for (final time in day.times)
+                  SizedBox(
+                    width: _timeWidth,
+                    height: _cellHeight + _gap,
+                    child: Center(
+                      child: Text(
+                        hhmm(time),
+                        style: venueTime(time).minute == 0
+                            ? const TextStyle(fontSize: 12, fontWeight: FontWeight.w700)
+                            : const TextStyle(fontSize: 11, color: AppColors.muted),
+                      ),
+                    ),
+                  ),
+              ],
             ),
-          ),
-        ]),
+            Expanded(
+              child: SingleChildScrollView(
+                controller: _bodyScroll,
+                scrollDirection: Axis.horizontal,
+                padding: const EdgeInsets.only(right: 8),
+                child: Row(
+                  children: [
+                    for (final court in day.courts)
+                      Column(
+                        children: [
+                          for (final (i, slot) in (day.slots[court.id] ?? const <Slot>[]).indexed)
+                            _cell(court.id, i, slot),
+                        ],
+                      ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
 
-    return Column(children: [header, Expanded(child: body)]);
+    return Column(
+      children: [
+        header,
+        Expanded(child: body),
+      ],
+    );
   }
 
   Widget _cell(int courtId, int index, Slot slot) {
-    final scheme = Theme.of(context).colorScheme;
     final picked = _picked[courtId]?.contains(index) ?? false;
-    final (Color color, Color text) = picked
-        ? (scheme.primary, Colors.white)
+    final Widget? content = picked
+        ? const Icon(Icons.check_rounded, color: Colors.white, size: 20)
         : switch (slot.state) {
-            'available' => (Colors.white, Colors.black87),
-            'mine' => (Colors.blue.shade200, Colors.black87),
-            'held' => (Colors.amber.shade200, Colors.black54),
-            _ => (Colors.grey.shade300, Colors.black38),
+            'available' => Text(
+              shortVnd(slot.priceVnd),
+              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primaryDark),
+            ),
+            'mine' => const Icon(Icons.person_rounded, color: AppColors.indigo, size: 18),
+            'held' => const Icon(Icons.hourglass_bottom_rounded, color: AppColors.amber, size: 16),
+            _ => null,
           };
+    final color = switch (slot.state) {
+      _ when picked => null,
+      'available' => Colors.white,
+      'mine' => _mine,
+      'held' => _held,
+      _ => _taken,
+    };
 
     return GestureDetector(
       onTap: slot.available ? () => _tap(courtId, index) : null,
-      child: Container(
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 150),
         width: _cellWidth,
         height: _cellHeight,
-        margin: EdgeInsets.zero,
-        decoration: BoxDecoration(color: color, border: Border.all(color: Colors.grey.shade300, width: 0.5)),
+        margin: const EdgeInsets.all(_gap / 2),
+        decoration: BoxDecoration(
+          color: color,
+          gradient: picked ? AppColors.brandGradient : null,
+          border: slot.state == 'available' && !picked ? Border.all(color: AppColors.line) : null,
+          borderRadius: BorderRadius.circular(12),
+          boxShadow: picked
+              ? [BoxShadow(color: AppColors.primary.withValues(alpha: 0.35), blurRadius: 8, offset: const Offset(0, 3))]
+              : null,
+        ),
         alignment: Alignment.center,
-        child: slot.available ? Text(shortVnd(slot.priceVnd), style: TextStyle(fontSize: 11, color: text)) : null,
+        child: content,
       ),
     );
   }
@@ -350,32 +472,59 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     final minMinutes = state.venue?.minBookingMinutes ?? 0;
     final tooShort = shortest < minMinutes;
 
-    return Material(
-      elevation: 8,
-      child: SafeArea(
-        top: false,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(16, 12, 16, 12),
-          child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.stretch, children: [
-            Row(children: [
-              Expanded(
-                child: Text('${s.pickedSummary(_picked.length, s.hours(minutes))} · ${vnd(total)}',
-                    style: const TextStyle(fontWeight: FontWeight.w600)),
-              ),
-              TextButton(onPressed: () => setState(_picked.clear), child: Text(s.clear)),
-            ]),
+    return SafeArea(
+      top: false,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(12, 0, 12, 10),
+        padding: const EdgeInsets.fromLTRB(18, 14, 14, 14),
+        decoration: BoxDecoration(
+          color: AppColors.ink,
+          borderRadius: BorderRadius.circular(26),
+          boxShadow: const [BoxShadow(color: Color(0x40000000), blurRadius: 20, offset: Offset(0, 8))],
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        s.pickedSummary(_picked.length, s.hours(minutes)),
+                        style: TextStyle(color: Colors.white.withValues(alpha: 0.7), fontSize: 13),
+                      ),
+                      Text(
+                        vnd(total),
+                        style: const TextStyle(color: AppColors.lime, fontSize: 22, fontWeight: FontWeight.w800),
+                      ),
+                    ],
+                  ),
+                ),
+                TextButton(
+                  style: TextButton.styleFrom(foregroundColor: Colors.white70),
+                  onPressed: () => setState(_picked.clear),
+                  child: Text(s.clear),
+                ),
+              ],
+            ),
             if (tooShort)
               Padding(
-                padding: const EdgeInsets.only(bottom: 8),
-                child: Text(s.minDuration(s.hours(minMinutes)), style: TextStyle(color: Theme.of(context).colorScheme.error)),
+                padding: const EdgeInsets.only(top: 4),
+                child: Text(s.minDuration(s.hours(minMinutes)), style: const TextStyle(color: Color(0xFFFCA5A5))),
               ),
-            FilledButton(
-              onPressed: tooShort || _continuing ? null : _continue,
-              child: _continuing
-                  ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                  : Text(s.continueLabel),
+            const SizedBox(height: 12),
+            GradientButton(
+              label: s.continueLabel,
+              icon: Icons.arrow_forward_rounded,
+              gradient: AppColors.limeGradient,
+              foreground: AppColors.ink,
+              busy: _continuing,
+              onPressed: tooShort ? null : _continue,
             ),
-          ]),
+          ],
         ),
       ),
     );
