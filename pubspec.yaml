@@ -1,7 +1,7 @@
 name: vn_badminton_mobile
 description: "A new Flutter project."
 publish_to: 'none'
-version: 0.2.0+3
+version: 0.3.0+4
 
 environment:
   sdk: ^3.13.5
@@ -17,6 +17,7 @@ dependencies:
   intl: ^0.20.3
   local_auth: ^3.0.2
   package_info_plus: ^10.2.2
+  share_plus: ^13.3.1
   shared_preferences: ^2.5.6
   url_launcher: ^6.3.3
 

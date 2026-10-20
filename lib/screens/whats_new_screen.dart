@@ -16,6 +16,26 @@ class Release {
 }
 
 const releases = [
+  Release(
+    '0.3.0',
+    '20/10/2026',
+    [
+      'Đổi giờ lượt đặt ngay trong app.',
+      'Thuê thêm vợt, ống cầu, nước uống khi đặt sân.',
+      'Báo cho bạn khi khung giờ kín có sân trống.',
+      'Bảng tin của sân, đánh giá buổi chơi.',
+      'Thêm lịch chơi vào Google Calendar, chia sẻ qua Zalo kèm số tiền mỗi người.',
+      'Lịch cố định: gửi yêu cầu, xem lịch và đóng tiền tháng.',
+    ],
+    [
+      'Change the time of a booking in the app.',
+      'Add racket rental, shuttlecocks or drinks when booking.',
+      'Get told when a taken time has a free court.',
+      'Venue news and session reviews.',
+      'Add your game to Google Calendar, share it on Zalo with each player\'s share.',
+      'Regular bookings: send a request, see your schedule and pay each month.',
+    ],
+  ),
   Release('0.2.0', '20/10/2026', [
     'Giao diện mới: màu sắc tươi hơn, thẻ bo tròn, trạng thái sân và thanh toán có màu riêng.',
     'Chọn ngày dễ hơn, lịch sân rõ hơn, tổng tiền hiện ngay khi chọn giờ.',

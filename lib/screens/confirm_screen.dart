@@ -28,6 +28,12 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
   late final DateTime _heldUntil = DateTime.parse(widget.hold['held_until'] as String);
   late final List<Booking> _bookings = [for (final b in widget.hold['bookings'] as List) Booking.fromJson(b)];
   late final int _amount = (widget.hold['amount_vnd'] as num).toInt();
+
+  /// Extras picked (TI-01): product id -> quantity.
+  final Map<int, int> _quantities = {};
+
+  int _extrasVnd(List<Product> products) =>
+      products.fold(0, (sum, product) => sum + product.priceVnd * (_quantities[product.id] ?? 0));
   late final Timer _timer;
   late final _api = AppScope.read(context).api;
   bool _busy = false;
@@ -63,7 +69,14 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
       _error = null;
     });
     try {
-      final json = await _api.post('/bookings', {'slots': widget.slots, 'note': _note.text.trim()});
+      final json = await _api.post('/bookings', {
+        'slots': widget.slots,
+        'note': _note.text.trim(),
+        'items': [
+          for (final entry in _quantities.entries)
+            if (entry.value > 0) {'product_id': entry.key, 'quantity': entry.value},
+        ],
+      });
       _booked = true;
       if (!mounted) return;
       final payment = Payment.fromJson(json);
@@ -86,6 +99,7 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
     final s = S.of(context);
     final locale = AppScope.of(context).locale;
     final expired = _left.isNegative;
+    final products = AppScope.of(context).venue?.products ?? const <Product>[];
 
     return Scaffold(
       body: ListView(
@@ -145,6 +159,7 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
                       ],
                     ),
                   ),
+                if (products.isNotEmpty) _extras(s, products),
                 Container(
                   margin: const EdgeInsets.symmetric(vertical: 10),
                   padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
@@ -158,7 +173,7 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
                         ),
                       ),
                       Text(
-                        vnd(_amount),
+                        vnd(_amount + _extrasVnd(products)),
                         style: const TextStyle(color: AppColors.lime, fontWeight: FontWeight.w800, fontSize: 22),
                       ),
                     ],
@@ -192,4 +207,58 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
       ),
     );
   }
+
+  Widget _extras(S s, List<Product> products) => SoftCard(
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            const IconBadge(Icons.sports_tennis_rounded, AppColors.orange, size: 36),
+            const SizedBox(width: 10),
+            Text(s.extras, style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(s.extrasHint, style: const TextStyle(color: AppColors.muted, fontSize: 13)),
+        const SizedBox(height: 4),
+        for (final product in products)
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(product.name, style: const TextStyle(fontWeight: FontWeight.w600)),
+                    Text(vnd(product.priceVnd), style: const TextStyle(color: AppColors.muted, fontSize: 13)),
+                  ],
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.remove_circle_outline_rounded),
+                color: AppColors.muted,
+                onPressed: (_quantities[product.id] ?? 0) == 0
+                    ? null
+                    : () => setState(() => _quantities[product.id] = _quantities[product.id]! - 1),
+              ),
+              SizedBox(
+                width: 24,
+                child: Text(
+                  '${_quantities[product.id] ?? 0}',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                ),
+              ),
+              IconButton(
+                icon: const Icon(Icons.add_circle_rounded),
+                color: AppColors.primary,
+                onPressed: (_quantities[product.id] ?? 0) >= 20
+                    ? null
+                    : () => setState(() => _quantities[product.id] = (_quantities[product.id] ?? 0) + 1),
+              ),
+            ],
+          ),
+      ],
+    ),
+  );
 }

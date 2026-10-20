@@ -11,9 +11,15 @@ import 'auth_screens.dart';
 import 'confirm_screen.dart';
 
 /// The booking grid of one day: courts across, times down. The customer taps free cells, one unbroken range
-/// per court (several courts allowed), then continues to the confirmation.
+/// per court (several courts allowed), then continues to the confirmation. Tapping a taken cell offers to be
+/// told when a court frees up (TI-04).
+///
+/// With [rescheduling], the grid picks the new time of that booking instead (one range on one court, its own
+/// slots selectable again, DOI-05) and pops true once it was moved.
 class ScheduleScreen extends StatefulWidget {
-  const ScheduleScreen({super.key});
+  const ScheduleScreen({super.key, this.rescheduling});
+
+  final Booking? rescheduling;
 
   @override
   State<ScheduleScreen> createState() => _ScheduleScreenState();
@@ -34,6 +40,9 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
   bool _loading = false;
   bool _continuing = false;
   int? _userId;
+  List<Announcement> _announcements = const [];
+
+  Booking? get _rescheduling => widget.rescheduling;
 
   /// Picked cells: court id -> indexes in the day's times (always one unbroken range).
   final Map<int, Set<int>> _picked = {};
@@ -44,7 +53,19 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     _bodyScroll.addListener(() {
       if (_headerScroll.hasClients) _headerScroll.jumpTo(_bodyScroll.offset);
     });
-    _load();
+    _load(date: _rescheduling == null ? null : venueDate(_rescheduling!.startsAt));
+    if (_rescheduling == null) _loadAnnouncements();
+  }
+
+  Future<void> _loadAnnouncements() async {
+    try {
+      final json = await AppScope.read(context).api.get('/announcements');
+      if (mounted) {
+        setState(() => _announcements = [for (final a in json['announcements'] as List) Announcement.fromJson(a)]);
+      }
+    } catch (_) {
+      // News are a nice-to-have: the schedule works without them.
+    }
   }
 
   @override
@@ -72,7 +93,13 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     });
     try {
       final json = await AppScope.read(context).api
-          .get('/schedule', query: {if ((date ?? _date) != null) 'date': (date ?? _date)!});
+          .get(
+            '/schedule',
+            query: {
+              if ((date ?? _date) != null) 'date': (date ?? _date)!,
+              if (_rescheduling != null) 'reschedule': _rescheduling!.code,
+            },
+          );
       final day = ScheduleDay.fromJson(json);
       if (!mounted) return;
       setState(() {
@@ -99,6 +126,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
 
   void _tap(int courtId, int index) {
     setState(() {
+      // A booking moves to one court only.
+      if (_rescheduling != null) _picked.removeWhere((id, _) => id != courtId);
       final picked = _picked[courtId] ?? <int>{};
       if (picked.contains(index)) {
         // Unpicking keeps the range unbroken: everything after the tapped cell goes too.
@@ -148,6 +177,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       if (!state.user!.emailVerified) return _askToVerify();
     }
 
+    if (_rescheduling != null) return _reviewReschedule();
+
     setState(() => _continuing = true);
     try {
       final slots = _slotsParam();
@@ -165,6 +196,127 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       if (error is ApiError && error.code == 'not_bookable') _load(keepPicked: true);
     } finally {
       if (mounted) setState(() => _continuing = false);
+    }
+  }
+
+  /// Shows the old and new times and the new price (checked by the server, nothing saved), then moves the booking.
+  Future<void> _reviewReschedule() async {
+    final s = S.of(context);
+    final state = AppScope.read(context);
+    final booking = _rescheduling!;
+    final slot = _slotsParam().single;
+    setState(() => _continuing = true);
+    try {
+      final review = await state.api.get(
+        '/bookings/${booking.code}/reschedule',
+        query: {for (final e in slot.entries) e.key: '${e.value}'},
+      );
+      if (!mounted) return;
+      final moved = Booking.fromJson(review['booking'] as Map<String, dynamic>);
+      final valid = review['valid'] == true;
+      final messages = [for (final m in review['messages'] as List) m.toString()];
+      final ok = await showDialog<bool>(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: Text(s.reschedule),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              InfoRow(s.oldTime, '${booking.court.name} · ${timeRange(booking.startsAt, booking.endsAt)}\n${longDate(booking.startsAt, state.locale)}'),
+              InfoRow(s.newTime, '${moved.court.name} · ${timeRange(moved.startsAt, moved.endsAt)}\n${longDate(moved.startsAt, state.locale)}'),
+              InfoRow(s.newPrice, vnd(moved.amountVnd)),
+              if (booking.paymentStatus == 'paid')
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(s.keepPaidAmount, style: const TextStyle(color: AppColors.muted, fontSize: 13)),
+                ),
+              if (!valid)
+                Padding(
+                  padding: const EdgeInsets.only(top: 8),
+                  child: Text(messages.join('\n'), style: const TextStyle(color: AppColors.rose)),
+                ),
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(context, false), child: Text(s.cancel)),
+            if (valid) FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(s.confirm)),
+          ],
+        ),
+      );
+      if (ok != true || !mounted) return;
+      await state.api.patch('/bookings/${booking.code}/reschedule', slot);
+      if (!mounted) return;
+      showMessage(context, s.rescheduled);
+      Navigator.of(context).pop(true);
+    } catch (error) {
+      if (mounted) showMessage(context, s.error(error));
+    } finally {
+      if (mounted) setState(() => _continuing = false);
+    }
+  }
+
+  /// A taken cell: offers to wait for that time on any court (TI-04), for one to two hours from it.
+  Future<void> _askWaitlist(int courtId, int index) async {
+    final s = S.of(context);
+    final state = AppScope.read(context);
+    final day = _day!;
+    final start = day.slots[courtId]![index].startsAt;
+    final last = day.times.last.add(const Duration(minutes: 30));
+    final options = [
+      for (final minutes in [60, 90, 120])
+        if (!start.add(Duration(minutes: minutes)).isAfter(last)) minutes,
+    ];
+    if (options.isEmpty) options.add(last.difference(start).inMinutes);
+
+    final minutes = await showModalBottomSheet<int>(
+      context: context,
+      builder: (context) => SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  const IconBadge(Icons.notifications_active_rounded, AppColors.orange),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Text(s.notifyWhenFree, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(s.notifyRange('${hhmm(start)} · ${longDate(start, state.locale)}')),
+              const SizedBox(height: 12),
+              Wrap(
+                spacing: 8,
+                children: [
+                  for (final m in options)
+                    ActionChip(
+                      label: Text('${hhmm(start)}–${hhmm(start.add(Duration(minutes: m)))} (${s.hours(m)})'),
+                      onPressed: () => Navigator.pop(context, m),
+                    ),
+                ],
+              ),
+              const SizedBox(height: 12),
+              Text(s.notifyHint, style: const TextStyle(color: AppColors.muted, fontSize: 13)),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (minutes == null || !mounted) return;
+    if (!await ensureSignedIn(context) || !mounted) return;
+    try {
+      await state.api.post('/waitlist', {
+        'starts_at': venueIso(start),
+        'ends_at': venueIso(start.add(Duration(minutes: minutes))),
+      });
+      if (mounted) showMessage(context, s.notifySaved);
+    } catch (error) {
+      if (mounted) showMessage(context, s.error(error));
     }
   }
 
@@ -201,8 +353,14 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       body: Column(
         children: [
           GradientHeader(
-            title: firstName.isEmpty ? (state.venue?.name ?? 'VN Badminton') : s.hello(firstName),
-            subtitle: s.readyToPlay,
+            title: _rescheduling != null
+                ? s.rescheduleTitle
+                : firstName.isEmpty
+                ? (state.venue?.name ?? 'VN Badminton')
+                : s.hello(firstName),
+            subtitle: _rescheduling != null
+                ? '${_rescheduling!.court.name} · ${timeRange(_rescheduling!.startsAt, _rescheduling!.endsAt)}'
+                : s.readyToPlay,
             bottomPadding: 18,
             actions: [
               _loading
@@ -228,6 +386,12 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
                       : const Center(child: CircularProgressIndicator()))
                 : Column(
                     children: [
+                      for (final announcement in _announcements) _announcement(announcement),
+                      if (_rescheduling != null)
+                        Padding(
+                          padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+                          child: Text(s.rescheduleHint, style: const TextStyle(color: AppColors.muted, fontSize: 13)),
+                        ),
                       _legend(s),
                       Expanded(child: day.times.isEmpty ? Center(child: Text(s.noSlots)) : _grid(day)),
                       if (_picked.isNotEmpty) _summary(s, state),
@@ -285,6 +449,43 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       },
     ),
   );
+
+  Widget _announcement(Announcement announcement) {
+    final (color, icon) = switch (announcement.tone) {
+      'offer' => (AppColors.primary, Icons.local_offer_rounded),
+      'warning' => (AppColors.orange, Icons.campaign_rounded),
+      _ => (AppColors.blue, Icons.info_rounded),
+    };
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: color.withValues(alpha: 0.3)),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(icon, color: color),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(announcement.title, style: TextStyle(fontWeight: FontWeight.w800, color: color)),
+                if ((announcement.body ?? '').isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Text(announcement.body!, style: const TextStyle(fontSize: 13)),
+                  ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   Widget _legend(S s) {
     Widget item(Color color, String label, {Gradient? gradient, Color? border}) => Row(
@@ -437,7 +638,11 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     };
 
     return GestureDetector(
-      onTap: slot.available ? () => _tap(courtId, index) : null,
+      onTap: slot.available
+          ? () => _tap(courtId, index)
+          : (_rescheduling == null && (slot.state == 'booked' || slot.state == 'held'))
+          ? () => _askWaitlist(courtId, index)
+          : null,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 150),
         width: _cellWidth,
@@ -517,7 +722,7 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
               ),
             const SizedBox(height: 12),
             GradientButton(
-              label: s.continueLabel,
+              label: _rescheduling != null ? s.reschedule : s.continueLabel,
               icon: Icons.arrow_forward_rounded,
               gradient: AppColors.limeGradient,
               foreground: AppColors.ink,

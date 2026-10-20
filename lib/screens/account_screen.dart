@@ -10,7 +10,9 @@ import '../widgets.dart';
 import 'auth_screens.dart';
 import 'home_shell.dart';
 import 'profile_screen.dart';
+import 'series_screen.dart';
 import 'settings_screen.dart';
+import 'waitlist_screen.dart';
 import 'whats_new_screen.dart';
 
 /// The account tab: profile card, shortcuts, contact and directions, settings and the app's information.
@@ -185,6 +187,13 @@ class AccountScreen extends StatelessWidget {
                     ],
                   ),
                 ),
+                if (user != null) ...[
+                  SectionTitle(s.activity),
+                  _group([
+                    _tile(Icons.repeat_rounded, AppColors.primary, s.regularBookings, () => push(const SeriesScreen())),
+                    _tile(Icons.notifications_active_rounded, AppColors.orange, s.waitlist, () => push(const WaitlistScreen())),
+                  ]),
+                ],
                 if (venue != null) ...[
                   SectionTitle(s.contactVenue),
                   SoftCard(

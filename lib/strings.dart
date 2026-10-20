@@ -230,4 +230,87 @@ class S {
       _('Tài khoản đã bị khoá và sẽ được xoá sau $date.', 'The account is locked and will be deleted after $date.');
   String bookingLocked(String date) =>
       _('Tài khoản tạm khoá đặt sân đến $date.', 'Booking is locked for this account until $date.');
+
+  // Reschedule (DOI-05)
+  String get reschedule => _('Đổi giờ', 'Change time');
+  String get rescheduleTitle => _('Chọn giờ mới', 'Pick a new time');
+  String get rescheduleHint => _('Chọn một khoảng giờ liền trên một sân. Giờ cũ vẫn chọn lại được.',
+      'Pick one unbroken range on one court. Your current time can be picked again.');
+  String get rescheduleOneCourt => _('Đổi giờ chỉ chọn được một sân.', 'Only one court can be picked when changing the time.');
+  String get oldTime => _('Giờ cũ', 'Current time');
+  String get newTime => _('Giờ mới', 'New time');
+  String get newPrice => _('Giá mới', 'New price');
+  String get rescheduled => _('Đã đổi giờ.', 'The time was changed.');
+  String get keepPaidAmount => _('Lượt đã thanh toán: giữ nguyên số tiền đã trả, không hoàn chênh lệch.',
+      'Paid booking: the amount paid is kept, the difference is not refunded.');
+  String get confirm => _('Xác nhận', 'Confirm');
+
+  // Extras (TI-01)
+  String get extras => _('Thuê thêm', 'Extras');
+  String get extrasHint => _('Nhân viên chuẩn bị sẵn khi bạn đến nhận sân.', 'The staff have them ready when you check in.');
+  String get courtPrice => _('Tiền sân', 'Court');
+
+  // Announcements, waitlist (TI-02, TI-04)
+  String get notifyWhenFree => _('Báo tôi khi có sân trống', 'Tell me when a court is free');
+  String notifyRange(String range) => _('Khung $range đang kín. Bạn muốn chờ bao lâu?', '$range is taken. How long do you want to play?');
+  String get notifyHint => _('Khi có sân trống trọn khung này, app gửi email cho bạn. Ai đặt trước được trước.',
+      'When a court frees up for all of it, you get an email. First come, first served.');
+  String get notifySaved => _('Đã đăng ký. Bạn sẽ nhận email khi có sân trống.', "Done. You'll get an email when a court is free.");
+  String get waitlist => _('Đang chờ sân trống', 'Waiting for a free court');
+  String get waitlistEmpty => _('Bạn chưa chờ khung giờ nào. Chạm vào ô đã kín trên lịch để đăng ký.',
+      'You are not waiting for any time. Tap a taken cell on the schedule to start.');
+  String get remove => _('Bỏ', 'Remove');
+
+  // Review (TI-03)
+  String get rateSession => _('Đánh giá buổi chơi', 'Rate this session');
+  String get yourReview => _('Đánh giá của bạn', 'Your review');
+  String get reviewComment => _('Góp ý cho sân (không bắt buộc)', 'Comment for the venue (optional)');
+  String get send => _('Gửi', 'Send');
+  String get thanksReview => _('Cảm ơn bạn đã đánh giá!', 'Thanks for your review!');
+
+  // Calendar, share
+  String get addToCalendar => _('Thêm vào lịch', 'Add to calendar');
+  String get share => _('Chia sẻ', 'Share');
+  String get players => _('Số người chơi', 'Players');
+  String get splitTitle => _('Chia tiền cho nhóm', 'Split with your group');
+  String perPerson(String amount) => _('$amount / người', '$amount per person');
+  String shareText({required String court, required String date, required String time, required String venue,
+          required String address, required String total, String? split}) =>
+      _('🏸 Đặt sân cầu lông\n$court · $time\n$date\n$venue – $address\nTổng: $total${split == null ? '' : '\nMỗi người góp: $split'}',
+          '🏸 Badminton court booked\n$court · $time\n$date\n$venue – $address\nTotal: $total${split == null ? '' : '\nEach player: $split'}');
+
+  // Regular bookings (CD-09, CD-10)
+  String get regularBookings => _('Lịch cố định', 'Regular bookings');
+  String get regularIntro => _('Chơi cùng giờ mỗi tuần? Gửi yêu cầu, sân sẽ xếp lịch và báo lại cho bạn.',
+      'Playing at the same time every week? Send a request; the venue sets it up and lets you know.');
+  String get newRequest => _('Gửi yêu cầu', 'Send a request');
+  String get myRequests => _('Yêu cầu đã gửi', 'My requests');
+  String get mySeries => _('Lịch của tôi', 'My regular bookings');
+  String get courts => _('Sân', 'Courts');
+  String get anyCourtNote => _('Chọn một hoặc nhiều sân.', 'Pick one or more courts.');
+  String get daysOfWeek => _('Các ngày trong tuần', 'Days of the week');
+  String get startTime => _('Giờ bắt đầu', 'Start time');
+  String get endTime => _('Giờ kết thúc', 'End time');
+  String get fromDate => _('Từ ngày', 'From');
+  String get toDate => _('Đến ngày', 'Until');
+  String get requestSent => _('Đã gửi yêu cầu. Sân sẽ trả lời qua email.', 'Request sent. The venue will answer by email.');
+  String get withdraw => _('Rút lại', 'Withdraw');
+  String requestStatus(String status) => switch (status) {
+        'pending' => _('Chờ sân trả lời', 'Waiting for the venue'),
+        'approved' => _('Đã tạo lịch', 'Set up'),
+        'declined' => _('Bị từ chối', 'Declined'),
+        'cancelled' => _('Đã rút lại', 'Withdrawn'),
+        _ => status,
+      };
+  String reason(String reason) => _('Lý do: $reason', 'Reason: $reason');
+  String monthLabel(String month) {
+    final parts = month.split('-');
+    return _('Tháng ${int.parse(parts[1])}/${parts[0]}', '${parts[1]}/${parts[0]}');
+  }
+
+  String sessionsCount(int count) => _('$count buổi', '$count session${count == 1 ? '' : 's'}');
+  String get monthPaid => _('Đã đóng', 'Paid');
+  String payMonth(String amount) => _('Đóng $amount', 'Pay $amount');
+  String get nothingYet => _('Chưa có gì.', 'Nothing yet.');
+  String weekday(int day) => _(['CN', 'T2', 'T3', 'T4', 'T5', 'T6', 'T7'][day], ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'][day]);
 }

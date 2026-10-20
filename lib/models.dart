@@ -54,7 +54,9 @@ class Venue {
         paymentsEnabled = json['payments_enabled'] == true,
         minBookingMinutes = (json['policy']?['min_booking_minutes'] as int?) ?? 60,
         maxBookingMinutes = (json['policy']?['max_booking_minutes'] as int?) ?? 240,
-        cancellationCutoffHours = (json['policy']?['cancellation_cutoff_hours'] as int?) ?? 0;
+        cancellationCutoffHours = (json['policy']?['cancellation_cutoff_hours'] as int?) ?? 0,
+        courts = [for (final court in json['courts'] as List? ?? const []) Court.fromJson(court)],
+        products = [for (final product in json['products'] as List? ?? const []) Product.fromJson(product)];
 
   final String name;
   final String address;
@@ -64,6 +66,137 @@ class Venue {
   final int minBookingMinutes;
   final int maxBookingMinutes;
   final int cancellationCutoffHours;
+  final List<Court> courts;
+
+  /// What can be added to a booking (racket rental, shuttlecocks...), TI-01.
+  final List<Product> products;
+}
+
+class Product {
+  Product.fromJson(Map<String, dynamic> json)
+      : id = json['id'] as int,
+        name = json['name'] as String? ?? '',
+        priceVnd = (json['price_vnd'] as num?)?.toInt() ?? 0;
+
+  final int id;
+  final String name;
+  final int priceVnd;
+}
+
+class BookingItem {
+  BookingItem.fromJson(Map<String, dynamic> json)
+      : name = json['name'] as String? ?? '',
+        quantity = (json['quantity'] as num?)?.toInt() ?? 1,
+        unitPriceVnd = (json['unit_price_vnd'] as num?)?.toInt() ?? 0;
+
+  final String name;
+  final int quantity;
+  final int unitPriceVnd;
+}
+
+class Review {
+  Review.fromJson(Map<String, dynamic> json)
+      : rating = (json['rating'] as num?)?.toInt() ?? 0,
+        comment = json['comment'] as String?;
+
+  final int rating;
+  final String? comment;
+}
+
+/// The owner's news shown above the schedule (TI-02).
+class Announcement {
+  Announcement.fromJson(Map<String, dynamic> json)
+      : id = json['id'] as int,
+        title = json['title'] as String? ?? '',
+        body = json['body'] as String?,
+        tone = json['tone'] as String? ?? 'info';
+
+  final int id;
+  final String title;
+  final String? body;
+
+  /// info, offer or warning.
+  final String tone;
+}
+
+/// "Tell me when it frees up" (TI-04).
+class WaitlistEntry {
+  WaitlistEntry.fromJson(Map<String, dynamic> json)
+      : id = json['id'] as int,
+        startsAt = DateTime.parse(json['starts_at'] as String),
+        endsAt = DateTime.parse(json['ends_at'] as String);
+
+  final int id;
+  final DateTime startsAt;
+  final DateTime endsAt;
+}
+
+/// A weekly booking asked for in the app (CD-09).
+class SeriesRequest {
+  SeriesRequest.fromJson(Map<String, dynamic> json)
+      : id = json['id'] as int,
+        courts = [for (final court in json['courts'] as List? ?? const []) court as String],
+        daysOfWeek = [for (final day in json['days_of_week'] as List? ?? const []) (day as num).toInt()],
+        startMinute = (json['start_minute'] as num).toInt(),
+        endMinute = (json['end_minute'] as num).toInt(),
+        startsOn = json['starts_on'] as String,
+        endsOn = json['ends_on'] as String,
+        note = json['note'] as String?,
+        status = json['status'] as String,
+        declineReason = json['decline_reason'] as String?;
+
+  final int id;
+  final List<String> courts;
+  final List<int> daysOfWeek;
+  final int startMinute;
+  final int endMinute;
+  final String startsOn;
+  final String endsOn;
+  final String? note;
+
+  /// pending, approved, declined or cancelled.
+  final String status;
+  final String? declineReason;
+}
+
+/// A weekly booking made by the venue, with its months to pay (CD-10).
+class Series {
+  Series.fromJson(Map<String, dynamic> json)
+      : id = json['id'] as int,
+        courts = [for (final court in json['courts'] as List? ?? const []) court as String],
+        daysOfWeek = [for (final day in json['days_of_week'] as List? ?? const []) (day as num).toInt()],
+        startMinute = (json['start_minute'] as num).toInt(),
+        endMinute = (json['end_minute'] as num).toInt(),
+        startsOn = json['starts_on'] as String,
+        endsOn = json['ends_on'] as String,
+        months = [for (final month in json['months'] as List? ?? const []) SeriesMonth.fromJson(month)];
+
+  final int id;
+  final List<String> courts;
+  final List<int> daysOfWeek;
+  final int startMinute;
+  final int endMinute;
+  final String startsOn;
+  final String endsOn;
+  final List<SeriesMonth> months;
+}
+
+class SeriesMonth {
+  SeriesMonth.fromJson(Map<String, dynamic> json)
+      : month = json['month'] as String,
+        sessions = (json['sessions'] as num?)?.toInt() ?? 0,
+        dueVnd = (json['due_vnd'] as num?)?.toInt() ?? 0,
+        creditVnd = (json['credit_vnd'] as num?)?.toInt() ?? 0,
+        paid = json['paid'] == true,
+        paymentToken = json['payment_token'] as String?;
+
+  /// "2026-11".
+  final String month;
+  final int sessions;
+  final int dueVnd;
+  final int creditVnd;
+  final bool paid;
+  final String? paymentToken;
 }
 
 /// One 30-minute cell of the booking grid.
@@ -119,7 +252,13 @@ class Booking {
         series = json['series'] == true,
         canCancel = json['can_cancel'] == true,
         cancelWithoutRefund = json['cancel_without_refund'] == true,
-        paymentToken = json['payment_token'] as String?;
+        paymentToken = json['payment_token'] as String?,
+        itemsAmountVnd = (json['items_amount_vnd'] as num?)?.toInt() ?? 0,
+        totalVnd = (json['total_vnd'] as num?)?.toInt() ?? (json['amount_vnd'] as num?)?.toInt() ?? 0,
+        items = [for (final item in json['items'] as List? ?? const []) BookingItem.fromJson(item)],
+        canReschedule = json['can_reschedule'] == true,
+        canReview = json['can_review'] == true,
+        review = json['review'] is Map ? Review.fromJson(json['review'] as Map<String, dynamic>) : null;
 
   final String code;
   final Court court;
@@ -140,6 +279,14 @@ class Booking {
   final bool canCancel;
   final bool cancelWithoutRefund;
   final String? paymentToken;
+
+  /// The extras picked with the booking (TI-01); totalVnd is the court plus them.
+  final int itemsAmountVnd;
+  final int totalVnd;
+  final List<BookingItem> items;
+  final bool canReschedule;
+  final bool canReview;
+  final Review? review;
 }
 
 class Bank {
