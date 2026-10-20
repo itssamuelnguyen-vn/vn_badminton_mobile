@@ -17,6 +17,18 @@ class Release {
 
 const releases = [
   Release(
+    '0.5.0',
+    '20/10/2026',
+    [
+      'Tab Giao lưu: đi một mình vẫn có sân chơi, mua chỗ theo người.',
+      'Nhóm chơi: rủ bạn vào nhóm bằng mã, chia sẻ sân và xem mỗi người góp bao nhiêu.',
+    ],
+    [
+      'Open play tab: play even on your own, buy a place per player.',
+      'Groups: invite friends with a code, share bookings and see what each one pays.',
+    ],
+  ),
+  Release(
     '0.4.0',
     '20/10/2026',
     [

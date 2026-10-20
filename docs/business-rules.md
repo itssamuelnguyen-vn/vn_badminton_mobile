@@ -1,6 +1,6 @@
 # Quy tắc nghiệp vụ của app khách
 
-Cập nhật: 20/10/2026 (tiện ích: đổi giờ, thuê thêm, bảng tin, chờ sân trống, đánh giá, lịch, chia sẻ, lịch cố định; ưu đãi: hạng, mã giảm giá, gói giờ)
+Cập nhật: 20/10/2026 (tiện ích: đổi giờ, thuê thêm, bảng tin, chờ sân trống, đánh giá, lịch, chia sẻ, lịch cố định; ưu đãi: hạng, mã giảm giá, gói giờ; giao lưu, nhóm)
 
 Máy chủ (repo [vn_badminton](https://github.com/itssamuelnguyen-vn/vn_badminton), `docs/business-rules.md`) **quyết định mọi quy tắc**:
 giờ mở cửa, giá, giới hạn đặt sân, hạn huỷ, thanh toán... App chỉ hiển thị và gửi yêu cầu; khi app và máy chủ khác nhau thì máy chủ đúng.
@@ -55,11 +55,14 @@ File này ghi những gì **app tự làm** (hiển thị, kiểm tra trước, 
 
 | Mã     | Quy tắc                                                                                                                                       | Máy chủ        | Nguồn                               |
 |--------|-----------------------------------------------------------------------------------------------------------------------------------------------|----------------|-------------------------------------|
-| APP-40 | Danh sách **tải lại mỗi lần mở tab**: chờ chuyển khoản, sắp tới, đã qua/đã huỷ.                                                               |                | `lib/screens/home_shell.dart`       |
+| APP-40 | Bốn tab: **Đặt sân**, **Sân đã đặt**, **Giao lưu**, **Tài khoản**. Danh sách sân đã đặt **tải lại mỗi lần mở tab**: chờ chuyển khoản, sắp tới, đã qua/đã huỷ.                                                               |                | `lib/screens/home_shell.dart`       |
 | APP-42 | **Đánh giá** (1–5 sao + góp ý) khi máy chủ cho (`can_review`: đã nhận sân, đã chơi xong, trong 14 ngày), một lần; sau đó hiện đánh giá đã gửi. | TI-03 | `lib/screens/booking_screen.dart` |
 | APP-43 | **Thêm vào lịch** (mở trang tạo sự kiện của Google Calendar, điền sẵn sân, giờ, địa chỉ) và **Chia sẻ** (Zalo, Messenger… qua bảng chia sẻ của Android) cho lượt **đã xác nhận chưa chơi**. Chia sẻ hỏi **số người chơi** (1–20) và ghi **mỗi người góp** = tổng (sân + đồ) ÷ số người, **làm tròn lên nghìn đồng**. App không thu hộ. | | `lib/screens/booking_screen.dart` |
 | APP-45 | **Hạng thành viên** (thẻ màu theo hạng ở tab Tài khoản, tải lại mỗi lần mở tab): tên hạng, mức giảm, số giờ chơi 12 tháng, thanh tiến tới **hạng kế tiếp**; ẩn khi sân tắt chương trình. | UD-01 | `lib/screens/account_screen.dart` |
 | APP-46 | **Gói giờ** (Tài khoản): gói của tôi (còn bao nhiêu giờ, hạn, khung giờ dùng được; gói chưa chuyển khoản có nút mở lại màn chuyển khoản) và **gói đang bán** (nút **Mua** → màn chuyển khoản). | UD-04 | `lib/screens/packages_screen.dart` |
+| APP-47 | Tab **Giao lưu** (tab thứ 3): các buổi sắp tới (ngày, giờ, sân, trình độ, giá mỗi người, thanh số chỗ đã có người, "Hết chỗ"); xem được khi chưa đăng nhập. **Đăng ký**: chọn số người (1–10, không quá số chỗ còn), thấy tổng tiền, mở màn chuyển khoản. Chỗ của mình hiện trong thẻ buổi (chờ chuyển khoản: nút mở lại; **Huỷ chỗ** khi máy chủ cho, cảnh báo không hoàn tiền). | GL-01…03 | `lib/screens/play_screen.dart` |
+| APP-48 | **Nhóm chơi** (Tài khoản): tạo nhóm, vào nhóm bằng **mã 6 ký tự**, gửi mã mời qua bảng chia sẻ; thành viên (chủ nhóm có sao), các **sân đã chia sẻ** với tổng tiền và **mỗi người góp**. Gỡ chia sẻ (của mình, hoặc mọi chia sẻ nếu là chủ nhóm). **Rời nhóm**; chủ nhóm còn một mình thì nút thành **Xoá nhóm**. | NH-01…03 | `lib/screens/groups_screen.dart` |
+| APP-49 | **Chia sẻ vào nhóm** (lượt đã xác nhận chưa chơi): chọn nhóm, số người chơi (mặc định số thành viên, 1–50), thấy mỗi người góp (làm tròn lên nghìn). | NH-02 | `lib/screens/booking_screen.dart` |
 | APP-44 | **Lịch cố định** (Tài khoản): lịch sân đã tạo, mỗi tháng có số buổi và nút **Đóng <số tiền>** (mở màn chuyển khoản) hoặc "Đã đóng"; các **yêu cầu đã gửi** với trạng thái (chờ / đã tạo / bị từ chối kèm lý do / đã rút), rút lại khi còn chờ. **Gửi yêu cầu**: chọn sân, ngày trong tuần, giờ (05:00–24:00, tròn 30 phút), từ ngày (từ ngày mai) – đến ngày (tối đa 1 năm), ghi chú. | CD-09, CD-10 | `lib/screens/series_screen.dart` |
 | APP-41 | Nút **Huỷ** chỉ hiện khi máy chủ cho (`can_cancel`, trước hạn huỷ); lượt **đã thanh toán** thì cảnh báo **không hoàn tiền** trước khi huỷ.   | HUY-01         | `lib/screens/booking_screen.dart`   |
 

@@ -112,6 +112,93 @@ class _BookingScreenState extends State<BookingScreen> {
     await SharePlus.instance.share(ShareParams(text: text));
   }
 
+  /// Shows the booking to one of the customer's groups, with how many players split it (NH-02).
+  Future<void> _shareToGroup() async {
+    final s = S.of(context);
+    final api = AppScope.read(context).api;
+    final List<Group> groups;
+    try {
+      final json = await api.get('/groups');
+      groups = [for (final g in json['groups'] as List) Group.fromJson(g)];
+    } catch (error) {
+      if (mounted) showMessage(context, s.error(error));
+      return;
+    }
+    if (!mounted) return;
+    if (groups.isEmpty) return showMessage(context, s.noGroups);
+
+    final picked = await showModalBottomSheet<(Group, int)>(
+      context: context,
+      builder: (context) {
+        var group = groups.first;
+        var players = group.members.length;
+        return StatefulBuilder(
+          builder: (context, setSheetState) => SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(20, 0, 20, 20),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(s.shareToGroup, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+                  const SizedBox(height: 8),
+                  Wrap(
+                    spacing: 8,
+                    children: [
+                      for (final g in groups)
+                        ChoiceChip(
+                          label: Text(g.name),
+                          selected: g.id == group.id,
+                          onSelected: (_) => setSheetState(() {
+                            group = g;
+                            players = g.members.length;
+                          }),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Text(s.players, style: const TextStyle(color: AppColors.muted)),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.remove_circle_outline_rounded),
+                        onPressed: players > 1 ? () => setSheetState(() => players--) : null,
+                      ),
+                      Text('$players', style: const TextStyle(fontSize: 28, fontWeight: FontWeight.w800)),
+                      IconButton(
+                        icon: const Icon(Icons.add_circle_rounded, color: AppColors.primary),
+                        onPressed: players < 50 ? () => setSheetState(() => players++) : null,
+                      ),
+                    ],
+                  ),
+                  Text(
+                    s.perPerson(vnd(((_booking.totalVnd / players) / 1000).ceil() * 1000)),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(fontWeight: FontWeight.w700, color: AppColors.primaryDark),
+                  ),
+                  const SizedBox(height: 12),
+                  GradientButton(
+                    label: s.share,
+                    icon: Icons.groups_2_rounded,
+                    onPressed: () => Navigator.pop(context, (group, players)),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        );
+      },
+    );
+    if (picked == null || !mounted) return;
+    try {
+      await api.post('/groups/${picked.$1.id}/shares', {'booking_code': _booking.code, 'players': picked.$2});
+      if (mounted) showMessage(context, s.sharedToGroup);
+    } catch (error) {
+      if (mounted) showMessage(context, s.error(error));
+    }
+  }
+
   Future<void> _rate() async {
     final s = S.of(context);
     final comment = TextEditingController();
@@ -321,6 +408,15 @@ class _BookingScreenState extends State<BookingScreen> {
                           ),
                         ),
                       ],
+                    ),
+                  ),
+                if (booking.status == 'confirmed' && booking.endsAt.isAfter(DateTime.now()))
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8),
+                    child: OutlinedButton.icon(
+                      icon: const Icon(Icons.groups_2_rounded),
+                      label: Text(s.shareToGroup),
+                      onPressed: _shareToGroup,
                     ),
                   ),
                 if (booking.canReschedule)

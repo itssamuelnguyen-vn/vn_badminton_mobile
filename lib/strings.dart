@@ -397,4 +397,52 @@ class S {
     'Unused hours are not refunded. Cancelling a booking paid with hours does not give them back.',
   );
   String savedAmount(String amount) => _('Đã giảm $amount', '$amount off');
+
+  // Open play (GL-01..03)
+  String get tabPlay => _('Giao lưu', 'Open play');
+  String get playTitle => _('Giao lưu – vãng lai', 'Open play');
+  String get playIntro => _(
+    'Đi một mình hay ít người? Mua chỗ theo người và vào chơi cùng mọi người.',
+    'On your own or a few? Buy a place per player and join the others.',
+  );
+  String get noPlaySessions =>
+      _('Chưa có buổi giao lưu nào sắp tới. Quay lại sau nhé!', 'No open play coming up. Check back soon!');
+  String seatsLeft(int left, int capacity) => _('Còn $left/$capacity chỗ', '$left/$capacity places left');
+  String get full => _('Hết chỗ', 'Full');
+  String perPlayer(String amount) => _('$amount/người', '$amount per player');
+  String get joinSession => _('Đăng ký', 'Join');
+  String get howManyPlayers => _('Bạn đi mấy người?', 'How many players?');
+  String yourPlaces(int count) => _('Bạn có $count chỗ', 'You have $count place${count == 1 ? '' : 's'}');
+  String get ticketPending => _('Chờ chuyển khoản', 'Awaiting transfer');
+  String get ticketConfirmed => _('Đã thanh toán', 'Paid');
+  String get givePlacesBack => _('Huỷ chỗ', 'Give places back');
+  String get givePlacesBackConfirm => _(
+    'Huỷ các chỗ này? Chỗ đã thanh toán không được hoàn tiền.',
+    'Give these places back? Paid places are not refunded.',
+  );
+  String levelLabel(String? level) => level == null ? _('Mọi trình độ', 'All levels') : skillLabel(level);
+
+  // Groups (NH-01..03)
+  String get groups => _('Nhóm chơi', 'Groups');
+  String get groupsIntro => _(
+    'Rủ bạn bè vào nhóm, chia sẻ sân đã đặt và xem mỗi người góp bao nhiêu.',
+    'Bring your friends into a group, share your bookings and see what each one pays.',
+  );
+  String get newGroup => _('Tạo nhóm', 'New group');
+  String get joinGroup => _('Vào nhóm bằng mã', 'Join with a code');
+  String get groupName => _('Tên nhóm', 'Group name');
+  String get groupCode => _('Mã nhóm', 'Group code');
+  String inviteText(String name, String code) => _(
+    'Vào nhóm "$name" trên app VN Badminton với mã: $code',
+    'Join "$name" on the VN Badminton app with the code: $code',
+  );
+  String membersCount(int count) => _('$count thành viên', '$count member${count == 1 ? '' : 's'}');
+  String get leaveGroup => _('Rời nhóm', 'Leave');
+  String get deleteGroup => _('Xoá nhóm', 'Delete group');
+  String get sharedBookings => _('Sân đã chia sẻ', 'Shared bookings');
+  String sharedBy(String name) => _('$name chia sẻ', 'Shared by $name');
+  String get shareToGroup => _('Chia sẻ vào nhóm', 'Share with a group');
+  String get sharedToGroup => _('Đã chia sẻ vào nhóm.', 'Shared with the group.');
+  String get noGroups => _('Bạn chưa ở nhóm nào.', 'You are not in any group yet.');
+  String get owner => _('Chủ nhóm', 'Owner');
 }

@@ -436,3 +436,108 @@ class Quote {
 }
 
 DateTime? _time(Object? value) => value is String ? DateTime.parse(value) : null;
+
+/// An open play session (GL-01): places sold per player.
+class PlaySession {
+  PlaySession.fromJson(Map<String, dynamic> json)
+    : id = json['id'] as int,
+      title = json['title'] as String? ?? '',
+      description = json['description'] as String?,
+      courts = [for (final court in json['courts'] as List? ?? const []) court as String],
+      startsAt = DateTime.parse(json['starts_at'] as String),
+      endsAt = DateTime.parse(json['ends_at'] as String),
+      capacity = (json['capacity'] as num?)?.toInt() ?? 0,
+      seatsLeft = (json['seats_left'] as num?)?.toInt() ?? 0,
+      priceVnd = (json['price_vnd'] as num?)?.toInt() ?? 0,
+      level = json['level'] as String?,
+      bookable = json['bookable'] == true,
+      myTickets = [for (final ticket in json['my_tickets'] as List? ?? const []) Ticket.fromJson(ticket)];
+
+  final int id;
+  final String title;
+  final String? description;
+  final List<String> courts;
+  final DateTime startsAt;
+  final DateTime endsAt;
+  final int capacity;
+  final int seatsLeft;
+  final int priceVnd;
+
+  /// beginner, intermediate, advanced, expert or null (any level).
+  final String? level;
+  final bool bookable;
+  final List<Ticket> myTickets;
+}
+
+/// Places the customer bought in an open play session.
+class Ticket {
+  Ticket.fromJson(Map<String, dynamic> json)
+    : id = json['id'] as int,
+      quantity = (json['quantity'] as num?)?.toInt() ?? 1,
+      amountVnd = (json['amount_vnd'] as num?)?.toInt() ?? 0,
+      status = json['status'] as String? ?? 'pending',
+      canCancel = json['can_cancel'] == true,
+      cancelWithoutRefund = json['cancel_without_refund'] == true,
+      paymentToken = json['payment_token'] as String?;
+
+  final int id;
+  final int quantity;
+  final int amountVnd;
+
+  /// pending (awaiting the transfer), confirmed or cancelled.
+  final String status;
+  final bool canCancel;
+  final bool cancelWithoutRefund;
+  final String? paymentToken;
+}
+
+/// Customers who play together (NH-01).
+class Group {
+  Group.fromJson(Map<String, dynamic> json)
+    : id = json['id'] as int,
+      name = json['name'] as String? ?? '',
+      inviteCode = json['invite_code'] as String? ?? '',
+      owner = json['owner'] == true,
+      members = [for (final member in json['members'] as List? ?? const []) GroupMember.fromJson(member)],
+      shares = [for (final share in json['shares'] as List? ?? const []) GroupShare.fromJson(share)];
+
+  final int id;
+  final String name;
+  final String inviteCode;
+
+  /// The signed-in customer owns it.
+  final bool owner;
+  final List<GroupMember> members;
+  final List<GroupShare> shares;
+}
+
+class GroupMember {
+  GroupMember.fromJson(Map<String, dynamic> json) : name = json['name'] as String? ?? '', owner = json['owner'] == true;
+
+  final String name;
+  final bool owner;
+}
+
+/// A booking shared with a group (NH-02).
+class GroupShare {
+  GroupShare.fromJson(Map<String, dynamic> json)
+    : id = json['id'] as int,
+      sharedBy = json['shared_by'] as String? ?? '',
+      mine = json['mine'] == true,
+      players = (json['players'] as num?)?.toInt() ?? 1,
+      perPlayerVnd = (json['per_player_vnd'] as num?)?.toInt() ?? 0,
+      totalVnd = (json['total_vnd'] as num?)?.toInt() ?? 0,
+      court = json['court'] as String? ?? '',
+      startsAt = DateTime.parse(json['starts_at'] as String),
+      endsAt = DateTime.parse(json['ends_at'] as String);
+
+  final int id;
+  final String sharedBy;
+  final bool mine;
+  final int players;
+  final int perPlayerVnd;
+  final int totalVnd;
+  final String court;
+  final DateTime startsAt;
+  final DateTime endsAt;
+}

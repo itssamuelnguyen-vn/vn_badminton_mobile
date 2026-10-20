@@ -4,9 +4,10 @@ import '../api.dart';
 import '../strings.dart';
 import 'account_screen.dart';
 import 'bookings_screen.dart';
+import 'play_screen.dart';
 import 'schedule_screen.dart';
 
-/// The three tabs: booking grid, my bookings, account.
+/// The four tabs: booking grid, my bookings, open play, account.
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
 
@@ -44,6 +45,7 @@ class HomeShellState extends State<HomeShell> {
         children: [
           const ScheduleScreen(),
           BookingsScreen(key: ValueKey(_bookingsVisits)),
+          const PlayScreen(),
           const AccountScreen(),
         ],
       ),
@@ -64,6 +66,11 @@ class HomeShellState extends State<HomeShell> {
               icon: const Icon(Icons.receipt_long_outlined),
               selectedIcon: const Icon(Icons.receipt_long),
               label: s.tabBookings,
+            ),
+            NavigationDestination(
+              icon: const Icon(Icons.groups_outlined),
+              selectedIcon: const Icon(Icons.groups_rounded),
+              label: s.tabPlay,
             ),
             NavigationDestination(
               icon: const Icon(Icons.person_outline),

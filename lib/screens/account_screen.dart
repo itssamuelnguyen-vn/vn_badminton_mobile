@@ -8,6 +8,7 @@ import '../strings.dart';
 import '../theme.dart';
 import '../widgets.dart';
 import 'auth_screens.dart';
+import 'groups_screen.dart';
 import 'home_shell.dart';
 import 'packages_screen.dart';
 import 'profile_screen.dart';
@@ -192,6 +193,7 @@ class AccountScreen extends StatelessWidget {
                 if (user != null) ...[
                   SectionTitle(s.activity),
                   _group([
+                    _tile(Icons.groups_2_rounded, AppColors.blue, s.groups, () => push(const GroupsScreen())),
                     _tile(Icons.inventory_2_rounded, AppColors.violet, s.packages, () => push(const PackagesScreen())),
                     _tile(Icons.repeat_rounded, AppColors.primary, s.regularBookings, () => push(const SeriesScreen())),
                     _tile(
