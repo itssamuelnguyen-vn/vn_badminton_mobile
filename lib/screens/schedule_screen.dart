@@ -92,14 +92,13 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
       _error = null;
     });
     try {
-      final json = await AppScope.read(context).api
-          .get(
-            '/schedule',
-            query: {
-              if ((date ?? _date) != null) 'date': (date ?? _date)!,
-              if (_rescheduling != null) 'reschedule': _rescheduling!.code,
-            },
-          );
+      final json = await AppScope.read(context).api.get(
+        '/schedule',
+        query: {
+          if ((date ?? _date) != null) 'date': (date ?? _date)!,
+          if (_rescheduling != null) 'reschedule': _rescheduling!.code,
+        },
+      );
       final day = ScheduleDay.fromJson(json);
       if (!mounted) return;
       setState(() {
@@ -223,8 +222,14 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              InfoRow(s.oldTime, '${booking.court.name} · ${timeRange(booking.startsAt, booking.endsAt)}\n${longDate(booking.startsAt, state.locale)}'),
-              InfoRow(s.newTime, '${moved.court.name} · ${timeRange(moved.startsAt, moved.endsAt)}\n${longDate(moved.startsAt, state.locale)}'),
+              InfoRow(
+                s.oldTime,
+                '${booking.court.name} · ${timeRange(booking.startsAt, booking.endsAt)}\n${longDate(booking.startsAt, state.locale)}',
+              ),
+              InfoRow(
+                s.newTime,
+                '${moved.court.name} · ${timeRange(moved.startsAt, moved.endsAt)}\n${longDate(moved.startsAt, state.locale)}',
+              ),
               InfoRow(s.newPrice, vnd(moved.amountVnd)),
               if (booking.paymentStatus == 'paid')
                 Padding(
@@ -473,7 +478,10 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(announcement.title, style: TextStyle(fontWeight: FontWeight.w800, color: color)),
+                Text(
+                  announcement.title,
+                  style: TextStyle(fontWeight: FontWeight.w800, color: color),
+                ),
                 if ((announcement.body ?? '').isNotEmpty)
                   Padding(
                     padding: const EdgeInsets.only(top: 2),

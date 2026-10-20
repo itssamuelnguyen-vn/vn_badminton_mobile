@@ -203,6 +203,8 @@ class _BookingsScreenState extends State<BookingsScreen> {
                 children: [
                   StatusPill(s.bookingStatus(booking.status), AppColors.bookingStatus(booking.status)),
                   StatusPill(s.paymentStatus(booking.paymentStatus), AppColors.paymentStatus(booking.paymentStatus)),
+                  if (booking.paidWithPackage)
+                    StatusPill(s.packages, AppColors.violet, icon: Icons.inventory_2_rounded),
                 ],
               ),
             ],

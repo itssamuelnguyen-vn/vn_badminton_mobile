@@ -1,6 +1,6 @@
 # Quy tắc nghiệp vụ của app khách
 
-Cập nhật: 20/10/2026 (tiện ích: đổi giờ, thuê thêm, bảng tin, chờ sân trống, đánh giá, lịch, chia sẻ, lịch cố định)
+Cập nhật: 20/10/2026 (tiện ích: đổi giờ, thuê thêm, bảng tin, chờ sân trống, đánh giá, lịch, chia sẻ, lịch cố định; ưu đãi: hạng, mã giảm giá, gói giờ)
 
 Máy chủ (repo [vn_badminton](https://github.com/itssamuelnguyen-vn/vn_badminton), `docs/business-rules.md`) **quyết định mọi quy tắc**:
 giờ mở cửa, giá, giới hạn đặt sân, hạn huỷ, thanh toán... App chỉ hiển thị và gửi yêu cầu; khi app và máy chủ khác nhau thì máy chủ đúng.
@@ -46,6 +46,9 @@ File này ghi những gì **app tự làm** (hiển thị, kiểm tra trước, 
 | APP-30 | Màn chuyển khoản: mã QR, thông tin tài khoản (bấm để chép), **số tiền còn thiếu** và **nội dung chuyển khoản** (phải đúng), đếm ngược **15 phút**.                                            | TT-02, TT-03   | `lib/screens/payment_screen.dart`   |
 | APP-31 | Khi màn chuyển khoản đang mở, app **hỏi máy chủ 4 giây một lần**; tiền về thì chuyển sang "Đã nhận tiền". Dừng hỏi khi đã thanh toán, hết hạn hoặc bị huỷ.                                     | TT-04          | `lib/screens/payment_screen.dart`   |
 | APP-33 | **Thuê thêm** ở bước xác nhận: mỗi món chọn 0–20; tổng cộng = tiền sân + đồ; gửi kèm khi đặt. | TI-01 | `lib/screens/confirm_screen.dart` |
+| APP-34 | Bước xác nhận **hỏi máy chủ giá** (`POST /quote`) khi mở, khi đổi số lượng đồ, khi áp mã, khi chọn gói: hiện **ưu đãi** (hạng hoặc mã, mức có lợi hơn) và **tổng**; lý do mã không dùng được hiện ngay dưới ô mã. Chỉ câu trả lời mới nhất được hiện. | UD-01…03 | `lib/screens/confirm_screen.dart` |
+| APP-35 | Có **gói giờ còn dùng được** → công tắc **Trả bằng gói giờ** (mỗi gói một công tắc, còn bao nhiêu giờ): bật thì ẩn đồ thuê thêm và ô mã (thuê tại quầy), nút thành **Đặt sân bằng gói giờ**; đặt xong không có màn chuyển khoản, về tab Sân đã đặt. | UD-05 | `lib/screens/confirm_screen.dart` |
+| APP-36 | Màn chuyển khoản ghi **"Đã giảm …"** khi đơn có ưu đãi. Lượt trả bằng gói có nhãn **Gói giờ** trong danh sách. | UD-03 | `lib/screens/payment_screen.dart`, `lib/screens/bookings_screen.dart` |
 | APP-32 | Chuyển thiếu: hiện số đã nhận và số còn thiếu, chuyển thêm cùng nội dung.                                                                                                                     | TT-04          | `lib/screens/payment_screen.dart`   |
 
 ## 5. Sân đã đặt
@@ -55,6 +58,8 @@ File này ghi những gì **app tự làm** (hiển thị, kiểm tra trước, 
 | APP-40 | Danh sách **tải lại mỗi lần mở tab**: chờ chuyển khoản, sắp tới, đã qua/đã huỷ.                                                               |                | `lib/screens/home_shell.dart`       |
 | APP-42 | **Đánh giá** (1–5 sao + góp ý) khi máy chủ cho (`can_review`: đã nhận sân, đã chơi xong, trong 14 ngày), một lần; sau đó hiện đánh giá đã gửi. | TI-03 | `lib/screens/booking_screen.dart` |
 | APP-43 | **Thêm vào lịch** (mở trang tạo sự kiện của Google Calendar, điền sẵn sân, giờ, địa chỉ) và **Chia sẻ** (Zalo, Messenger… qua bảng chia sẻ của Android) cho lượt **đã xác nhận chưa chơi**. Chia sẻ hỏi **số người chơi** (1–20) và ghi **mỗi người góp** = tổng (sân + đồ) ÷ số người, **làm tròn lên nghìn đồng**. App không thu hộ. | | `lib/screens/booking_screen.dart` |
+| APP-45 | **Hạng thành viên** (thẻ màu theo hạng ở tab Tài khoản, tải lại mỗi lần mở tab): tên hạng, mức giảm, số giờ chơi 12 tháng, thanh tiến tới **hạng kế tiếp**; ẩn khi sân tắt chương trình. | UD-01 | `lib/screens/account_screen.dart` |
+| APP-46 | **Gói giờ** (Tài khoản): gói của tôi (còn bao nhiêu giờ, hạn, khung giờ dùng được; gói chưa chuyển khoản có nút mở lại màn chuyển khoản) và **gói đang bán** (nút **Mua** → màn chuyển khoản). | UD-04 | `lib/screens/packages_screen.dart` |
 | APP-44 | **Lịch cố định** (Tài khoản): lịch sân đã tạo, mỗi tháng có số buổi và nút **Đóng <số tiền>** (mở màn chuyển khoản) hoặc "Đã đóng"; các **yêu cầu đã gửi** với trạng thái (chờ / đã tạo / bị từ chối kèm lý do / đã rút), rút lại khi còn chờ. **Gửi yêu cầu**: chọn sân, ngày trong tuần, giờ (05:00–24:00, tròn 30 phút), từ ngày (từ ngày mai) – đến ngày (tối đa 1 năm), ghi chú. | CD-09, CD-10 | `lib/screens/series_screen.dart` |
 | APP-41 | Nút **Huỷ** chỉ hiện khi máy chủ cho (`can_cancel`, trước hạn huỷ); lượt **đã thanh toán** thì cảnh báo **không hoàn tiền** trước khi huỷ.   | HUY-01         | `lib/screens/booking_screen.dart`   |
 

@@ -25,7 +25,8 @@ String weekdayShort(String isoDate, String locale) => DateFormat('EEE', locale).
 String dayOfMonth(String isoDate) => DateFormat('dd').format(DateTime.parse(isoDate));
 
 /// 1080 -> "18:00" (minutes since midnight, as the API gives opening times).
-String minuteLabel(int minute) => '${(minute ~/ 60).toString().padLeft(2, '0')}:${(minute % 60).toString().padLeft(2, '0')}';
+String minuteLabel(int minute) =>
+    '${(minute ~/ 60).toString().padLeft(2, '0')}:${(minute % 60).toString().padLeft(2, '0')}';
 
 /// "2026-11-03" -> "03/11/2026".
 String isoDateLabel(String isoDate) => DateFormat('dd/MM/yyyy').format(DateTime.parse(isoDate));

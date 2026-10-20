@@ -8,6 +8,7 @@ import '../models.dart';
 import '../strings.dart';
 import '../theme.dart';
 import '../widgets.dart';
+import 'home_shell.dart';
 import 'payment_screen.dart';
 
 /// The confirmation step: the picked slots are held for the customer for a few minutes (POST /hold). Going
@@ -34,6 +35,20 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
 
   int _extrasVnd(List<Product> products) =>
       products.fold(0, (sum, product) => sum + product.priceVnd * (_quantities[product.id] ?? 0));
+
+  // Offers (UD-03): the price after the member tier or a voucher, or paid with prepaid hours.
+  final _voucher = TextEditingController();
+  String? _appliedVoucher;
+  Quote? _quote;
+  List<PackagePurchase> _purchases = const [];
+  PackagePurchase? _package;
+  int _quoteRequest = 0;
+
+  List<Map<String, dynamic>> get _items => [
+    for (final entry in _quantities.entries)
+      if (entry.value > 0) {'product_id': entry.key, 'quantity': entry.value},
+  ];
+
   late final Timer _timer;
   late final _api = AppScope.read(context).api;
   bool _busy = false;
@@ -46,6 +61,43 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
   void initState() {
     super.initState();
     _timer = Timer.periodic(const Duration(seconds: 1), (_) => setState(() {}));
+    _requote();
+    _loadPackages();
+  }
+
+  Future<void> _loadPackages() async {
+    try {
+      final json = await _api.get('/packages');
+      if (!mounted) return;
+      setState(() {
+        _purchases = [for (final p in json['purchases'] as List) PackagePurchase.fromJson(p)]
+            .where((p) => p.usable)
+            .toList();
+      });
+    } catch (_) {
+      // Without them, the customer pays by transfer as usual.
+    }
+  }
+
+  /// Asks the server what the order costs now (only the latest answer is kept).
+  Future<void> _requote() async {
+    final request = ++_quoteRequest;
+    try {
+      final json = await _api.post('/quote', {
+        'slots': widget.slots,
+        if (_package == null) 'items': _items,
+        if (_appliedVoucher != null) 'voucher_code': _appliedVoucher,
+        if (_package != null) 'package_purchase_id': _package!.id,
+      });
+      if (mounted && request == _quoteRequest) setState(() => _quote = Quote.fromJson(json));
+    } catch (_) {
+      // The booking itself checks everything again.
+    }
+  }
+
+  void _changeQuantity(int productId, int quantity) {
+    setState(() => _quantities[productId] = quantity);
+    _requote();
   }
 
   @override
@@ -58,6 +110,7 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
   void dispose() {
     _timer.cancel();
     _note.dispose();
+    _voucher.dispose();
     // Leaving without booking: free the slots at once for other customers.
     if (!_booked) _api.delete('/hold').catchError((_) => null);
     super.dispose();
@@ -72,15 +125,21 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
       final json = await _api.post('/bookings', {
         'slots': widget.slots,
         'note': _note.text.trim(),
-        'items': [
-          for (final entry in _quantities.entries)
-            if (entry.value > 0) {'product_id': entry.key, 'quantity': entry.value},
-        ],
+        if (_package == null) 'items': _items,
+        if (_package == null && _appliedVoucher != null) 'voucher_code': _appliedVoucher,
+        if (_package != null) 'package_purchase_id': _package!.id,
       });
       _booked = true;
       if (!mounted) return;
-      final payment = Payment.fromJson(json);
       final navigator = Navigator.of(context);
+      if (_package != null) {
+        // Paid with prepaid hours: confirmed already, nothing to transfer.
+        showMessage(context, S.of(context).bookedWithPackage);
+        navigator.pop(true);
+        HomeShell.showTab(context, 1);
+        return;
+      }
+      final payment = Payment.fromJson(json);
       navigator.pop(true);
       navigator.push(
         MaterialPageRoute(
@@ -159,7 +218,39 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
                       ],
                     ),
                   ),
-                if (products.isNotEmpty) _extras(s, products),
+                if (_purchases.isNotEmpty) _packageChoice(s),
+                if (products.isNotEmpty && _package == null) _extras(s, products),
+                if (_package != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 4),
+                    child: Text(s.extrasAtCounter, style: const TextStyle(color: AppColors.muted, fontSize: 13)),
+                  ),
+                if (_package == null) _voucherField(s),
+                if ((_quote?.discountVnd ?? 0) > 0 && _quote?.offerKind != 'package')
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(4, 8, 4, 0),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.local_offer_rounded, color: AppColors.primary, size: 18),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            '${s.discount}: ${_quote!.offerLabel ?? ''}',
+                            style: const TextStyle(fontWeight: FontWeight.w600),
+                          ),
+                        ),
+                        Text(
+                          '−${vnd(_quote!.discountVnd)}',
+                          style: const TextStyle(fontWeight: FontWeight.w800, color: AppColors.primary),
+                        ),
+                      ],
+                    ),
+                  ),
+                for (final message in _quote?.messages ?? const <String>[])
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(4, 6, 4, 0),
+                    child: Text(message, style: const TextStyle(color: AppColors.orange, fontSize: 13)),
+                  ),
                 Container(
                   margin: const EdgeInsets.symmetric(vertical: 10),
                   padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 16),
@@ -173,7 +264,7 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
                         ),
                       ),
                       Text(
-                        vnd(_amount + _extrasVnd(products)),
+                        vnd(_quote?.totalVnd ?? _amount + _extrasVnd(products)),
                         style: const TextStyle(color: AppColors.lime, fontWeight: FontWeight.w800, fontSize: 22),
                       ),
                     ],
@@ -199,7 +290,12 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
                     onPressed: () => Navigator.of(context).pop(false),
                   )
                 else
-                  GradientButton(label: s.bookAndPay, icon: Icons.qr_code_2_rounded, busy: _busy, onPressed: _book),
+                  GradientButton(
+                    label: _package != null ? s.bookWithPackage : s.bookAndPay,
+                    icon: _package != null ? Icons.inventory_2_rounded : Icons.qr_code_2_rounded,
+                    busy: _busy,
+                    onPressed: _book,
+                  ),
               ],
             ),
           ),
@@ -239,7 +335,7 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
                 color: AppColors.muted,
                 onPressed: (_quantities[product.id] ?? 0) == 0
                     ? null
-                    : () => setState(() => _quantities[product.id] = _quantities[product.id]! - 1),
+                    : () => _changeQuantity(product.id, _quantities[product.id]! - 1),
               ),
               SizedBox(
                 width: 24,
@@ -254,10 +350,56 @@ class _ConfirmScreenState extends State<ConfirmScreen> {
                 color: AppColors.primary,
                 onPressed: (_quantities[product.id] ?? 0) >= 20
                     ? null
-                    : () => setState(() => _quantities[product.id] = (_quantities[product.id] ?? 0) + 1),
+                    : () => _changeQuantity(product.id, (_quantities[product.id] ?? 0) + 1),
               ),
             ],
           ),
+      ],
+    ),
+  );
+
+  Widget _packageChoice(S s) => SoftCard(
+    padding: const EdgeInsets.symmetric(vertical: 6),
+    child: Column(
+      children: [
+        for (final purchase in _purchases)
+          SwitchListTile(
+            secondary: const IconBadge(Icons.inventory_2_rounded, AppColors.violet, size: 38),
+            title: Text(s.payWithPackage),
+            subtitle: Text('${purchase.name} · ${s.packageLeft(s.hours(purchase.minutesLeft))}'),
+            value: _package?.id == purchase.id,
+            onChanged: (on) {
+              setState(() => _package = on ? purchase : null);
+              _requote();
+            },
+          ),
+      ],
+    ),
+  );
+
+  Widget _voucherField(S s) => Padding(
+    padding: const EdgeInsets.only(top: 8),
+    child: Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: _voucher,
+            textCapitalization: TextCapitalization.characters,
+            decoration: InputDecoration(
+              labelText: s.voucher,
+              prefixIcon: const Icon(Icons.confirmation_number_rounded),
+            ),
+          ),
+        ),
+        const SizedBox(width: 8),
+        FilledButton.tonal(
+          style: FilledButton.styleFrom(minimumSize: const Size(0, 54)),
+          onPressed: () {
+            setState(() => _appliedVoucher = _voucher.text.trim().isEmpty ? null : _voucher.text.trim());
+            _requote();
+          },
+          child: Text(s.apply),
+        ),
       ],
     ),
   );

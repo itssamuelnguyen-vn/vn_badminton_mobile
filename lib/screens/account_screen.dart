@@ -9,6 +9,7 @@ import '../theme.dart';
 import '../widgets.dart';
 import 'auth_screens.dart';
 import 'home_shell.dart';
+import 'packages_screen.dart';
 import 'profile_screen.dart';
 import 'series_screen.dart';
 import 'settings_screen.dart';
@@ -136,6 +137,7 @@ class AccountScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                if (user != null) const _LoyaltyCard(),
                 if (user != null && !user.emailVerified)
                   SoftCard(
                     child: Row(
@@ -190,8 +192,14 @@ class AccountScreen extends StatelessWidget {
                 if (user != null) ...[
                   SectionTitle(s.activity),
                   _group([
+                    _tile(Icons.inventory_2_rounded, AppColors.violet, s.packages, () => push(const PackagesScreen())),
                     _tile(Icons.repeat_rounded, AppColors.primary, s.regularBookings, () => push(const SeriesScreen())),
-                    _tile(Icons.notifications_active_rounded, AppColors.orange, s.waitlist, () => push(const WaitlistScreen())),
+                    _tile(
+                      Icons.notifications_active_rounded,
+                      AppColors.orange,
+                      s.waitlist,
+                      () => push(const WaitlistScreen()),
+                    ),
                   ]),
                 ],
                 if (venue != null) ...[
@@ -421,4 +429,98 @@ class _QuickAction extends StatelessWidget {
       ),
     ),
   );
+}
+
+/// The member tier (UD-01): name, discount, hours played and how far the next tier is.
+class _LoyaltyCard extends StatefulWidget {
+  const _LoyaltyCard();
+
+  @override
+  State<_LoyaltyCard> createState() => _LoyaltyCardState();
+}
+
+class _LoyaltyCardState extends State<_LoyaltyCard> {
+  @override
+  void initState() {
+    super.initState();
+    // Played hours change after each session: fresh each time the account tab is built.
+    AppScope.read(context).refreshUser().catchError((_) {});
+  }
+
+  static const _colors = {
+    'bronze': [Color(0xFFB45309), Color(0xFFF59E0B)],
+    'silver': [Color(0xFF64748B), Color(0xFFCBD5E1)],
+    'gold': [Color(0xFFCA8A04), Color(0xFFFDE047)],
+    'diamond': [Color(0xFF4F46E5), Color(0xFF22D3EE)],
+  };
+
+  @override
+  Widget build(BuildContext context) {
+    final s = S.of(context);
+    final loyalty = AppScope.of(context).loyalty;
+    if (loyalty == null || !loyalty.enabled) return const SizedBox.shrink();
+    final colors = _colors[loyalty.tier] ?? _colors['bronze']!;
+    final next = loyalty.nextHours;
+    final hoursText = loyalty.hours == loyalty.hours.roundToDouble()
+        ? '${loyalty.hours.round()}'
+        : loyalty.hours.toStringAsFixed(1);
+
+    return Container(
+      margin: const EdgeInsets.symmetric(vertical: 6),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: colors),
+        borderRadius: BorderRadius.circular(22),
+        boxShadow: [BoxShadow(color: colors.first.withValues(alpha: 0.35), blurRadius: 20, offset: const Offset(0, 8))],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.workspace_premium_rounded, color: Colors.white, size: 30),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(s.memberTier, style: TextStyle(color: Colors.white.withValues(alpha: 0.85), fontSize: 12)),
+                    Text(
+                      loyalty.name,
+                      style: const TextStyle(color: Colors.white, fontSize: 22, fontWeight: FontWeight.w800),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 8),
+          Text(
+            loyalty.percent > 0 ? s.tierDiscount(loyalty.percent) : s.noTierDiscount,
+            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.w700),
+          ),
+          const SizedBox(height: 10),
+          if (next != null) ...[
+            ClipRRect(
+              borderRadius: BorderRadius.circular(99),
+              child: LinearProgressIndicator(
+                value: (loyalty.hours / next).clamp(0, 1).toDouble(),
+                minHeight: 8,
+                backgroundColor: Colors.white.withValues(alpha: 0.25),
+                color: Colors.white,
+              ),
+            ),
+            const SizedBox(height: 6),
+          ],
+          Text(
+            [
+              s.hoursPlayed(hoursText),
+              if (next != null) s.toNextTier('${(next - loyalty.hours).ceil()}', loyalty.nextName ?? ''),
+            ].join(' · '),
+            style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 13),
+          ),
+        ],
+      ),
+    );
+  }
 }

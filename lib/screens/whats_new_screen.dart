@@ -17,6 +17,20 @@ class Release {
 
 const releases = [
   Release(
+    '0.4.0',
+    '20/10/2026',
+    [
+      'Hạng thành viên: chơi càng nhiều, giảm giá càng nhiều.',
+      'Nhập mã giảm giá khi đặt sân, xem ngay số tiền được giảm.',
+      'Gói giờ trả trước: mua một lần, đặt sân không cần chuyển khoản mỗi lần.',
+    ],
+    [
+      'Member tiers: the more you play, the bigger the discount.',
+      'Enter a voucher code when booking and see the discount right away.',
+      'Prepaid hours: buy once, then book without a transfer each time.',
+    ],
+  ),
+  Release(
     '0.3.0',
     '20/10/2026',
     [
@@ -36,15 +50,20 @@ const releases = [
       'Regular bookings: send a request, see your schedule and pay each month.',
     ],
   ),
-  Release('0.2.0', '20/10/2026', [
-    'Giao diện mới: màu sắc tươi hơn, thẻ bo tròn, trạng thái sân và thanh toán có màu riêng.',
-    'Chọn ngày dễ hơn, lịch sân rõ hơn, tổng tiền hiện ngay khi chọn giờ.',
-    'Trang tài khoản có lối tắt gọi điện, Zalo, Messenger và chỉ đường.',
-  ], [
-    'New look: brighter colours, rounded cards, a colour for each court and payment status.',
-    'Easier day picker, clearer court grid, the total shows as soon as you pick a time.',
-    'Shortcuts on the account page to call, Zalo, Messenger and directions.',
-  ]),
+  Release(
+    '0.2.0',
+    '20/10/2026',
+    [
+      'Giao diện mới: màu sắc tươi hơn, thẻ bo tròn, trạng thái sân và thanh toán có màu riêng.',
+      'Chọn ngày dễ hơn, lịch sân rõ hơn, tổng tiền hiện ngay khi chọn giờ.',
+      'Trang tài khoản có lối tắt gọi điện, Zalo, Messenger và chỉ đường.',
+    ],
+    [
+      'New look: brighter colours, rounded cards, a colour for each court and payment status.',
+      'Easier day picker, clearer court grid, the total shows as soon as you pick a time.',
+      'Shortcuts on the account page to call, Zalo, Messenger and directions.',
+    ],
+  ),
   Release(
     '0.1.0',
     '19/10/2026',

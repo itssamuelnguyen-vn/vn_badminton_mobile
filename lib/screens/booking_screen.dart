@@ -35,9 +35,8 @@ class _BookingScreenState extends State<BookingScreen> {
   }
 
   Future<void> _reschedule() async {
-    final moved = await Navigator.of(context).push<bool>(
-      MaterialPageRoute(builder: (_) => ScheduleScreen(rescheduling: _booking)),
-    );
+    final moved = await Navigator.of(context)
+        .push<bool>(MaterialPageRoute(builder: (_) => ScheduleScreen(rescheduling: _booking)));
     if (moved == true) _reload();
   }
 
@@ -135,7 +134,10 @@ class _BookingScreenState extends State<BookingScreen> {
                   for (var star = 1; star <= 5; star++)
                     IconButton(
                       iconSize: 40,
-                      icon: Icon(star <= rating ? Icons.star_rounded : Icons.star_outline_rounded, color: AppColors.amber),
+                      icon: Icon(
+                        star <= rating ? Icons.star_rounded : Icons.star_outline_rounded,
+                        color: AppColors.amber,
+                      ),
                       onPressed: () => setSheetState(() => rating = star),
                     ),
                 ],
@@ -159,10 +161,8 @@ class _BookingScreenState extends State<BookingScreen> {
       return;
     }
     try {
-      final json = await AppScope.read(context).api.post('/bookings/${_booking.code}/review', {
-        'rating': rating,
-        'comment': comment.text.trim(),
-      });
+      final json = await AppScope.read(context).api
+          .post('/bookings/${_booking.code}/review', {'rating': rating, 'comment': comment.text.trim()});
       if (!mounted) return;
       setState(() => _booking = Booking.fromJson(json));
       showMessage(context, s.thanksReview);
@@ -326,7 +326,11 @@ class _BookingScreenState extends State<BookingScreen> {
                 if (booking.canReschedule)
                   Padding(
                     padding: const EdgeInsets.only(top: 12),
-                    child: GradientButton(label: s.reschedule, icon: Icons.edit_calendar_rounded, onPressed: _reschedule),
+                    child: GradientButton(
+                      label: s.reschedule,
+                      icon: Icons.edit_calendar_rounded,
+                      onPressed: _reschedule,
+                    ),
                   ),
                 const SizedBox(height: 16),
                 if (booking.paymentToken != null)

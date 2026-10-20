@@ -16,6 +16,9 @@ class AppState extends ChangeNotifier {
 
   User? user;
   Venue? venue;
+
+  /// The member tier (UD-01), with the account.
+  Loyalty? loyalty;
   String locale = 'vi';
 
   /// "Open the app with a fingerprint or the face" (Settings), kept on the phone.
@@ -52,6 +55,7 @@ class AppState extends ChangeNotifier {
   Future<void> refreshUser() async {
     final json = await api.get('/account');
     user = User.fromJson(json['user']);
+    loyalty = json['loyalty'] is Map ? Loyalty.fromJson(json['loyalty'] as Map<String, dynamic>) : null;
     notifyListeners();
   }
 
@@ -154,6 +158,7 @@ class AppState extends ChangeNotifier {
   Future<void> _forget() async {
     api.token = null;
     user = null;
+    loyalty = null;
     await _secure.delete(key: 'token');
     notifyListeners();
   }

@@ -164,6 +164,8 @@ class _PaymentScreenState extends State<PaymentScreen> {
   ];
 
   List<Widget> _awaiting(S s, Payment payment) => [
+    if (payment.discountVnd > 0)
+      _notice(Icons.local_offer_rounded, AppColors.primary, s.savedAmount(vnd(payment.discountVnd))),
     if (payment.receivedVnd > 0 && payment.remainingVnd > 0)
       _notice(
         Icons.info_rounded,

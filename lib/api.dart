@@ -88,11 +88,9 @@ class Api {
 
     if (response.statusCode == 401 && token != null) onUnauthorized?.call();
     final error = json is Map ? json : const {};
-    throw ApiError(
-      response.statusCode,
-      error['error']?.toString() ?? 'http_${response.statusCode}',
-      [for (final message in (error['messages'] as List? ?? const [])) message.toString()],
-    );
+    throw ApiError(response.statusCode, error['error']?.toString() ?? 'http_${response.statusCode}', [
+      for (final message in (error['messages'] as List? ?? const [])) message.toString(),
+    ]);
   }
 
   dynamic _decode(String text) {

@@ -53,7 +53,9 @@ class _SeriesScreenState extends State<SeriesScreen> {
       if (!mounted) return;
       final payment = Payment.fromJson(json);
       await Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => PaymentScreen(token: payment.token, initial: payment)),
+        MaterialPageRoute(
+          builder: (_) => PaymentScreen(token: payment.token, initial: payment),
+        ),
       );
       _load();
     } catch (error) {
@@ -154,7 +156,10 @@ class _SeriesScreenState extends State<SeriesScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(s.monthLabel(month.month), style: const TextStyle(fontWeight: FontWeight.w700)),
-                      Text(s.sessionsCount(month.sessions), style: const TextStyle(color: AppColors.muted, fontSize: 13)),
+                      Text(
+                        s.sessionsCount(month.sessions),
+                        style: const TextStyle(color: AppColors.muted, fontSize: 13),
+                      ),
                     ],
                   ),
                 ),
@@ -347,9 +352,7 @@ class _SeriesRequestScreenState extends State<SeriesRequestScreen> {
                           label(s.startTime),
                           DropdownButtonFormField<int>(
                             initialValue: _start,
-                            items: [
-                              for (final m in minutes) DropdownMenuItem(value: m, child: Text(minuteLabel(m))),
-                            ],
+                            items: [for (final m in minutes) DropdownMenuItem(value: m, child: Text(minuteLabel(m)))],
                             onChanged: (m) => setState(() {
                               _start = m!;
                               if (_end <= _start) _end = _start + 60;
