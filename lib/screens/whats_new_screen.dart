@@ -17,6 +17,20 @@ class Release {
 
 const releases = [
   Release(
+    '0.6.0',
+    '21/10/2026',
+    [
+      'Link trong email (chuyển khoản, lượt đặt) mở thẳng trong app.',
+      'Thêm vào lịch bằng ứng dụng lịch của điện thoại.',
+      'Tải dữ liệu của tôi: lưu hoặc gửi file dữ liệu tài khoản.',
+    ],
+    [
+      'Links in our emails (payment, booking) open right in the app.',
+      "Add to calendar with your phone's calendar app.",
+      'Download my data: save or send your account data file.',
+    ],
+  ),
+  Release(
     '0.5.0',
     '20/10/2026',
     [

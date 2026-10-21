@@ -1,5 +1,8 @@
+import 'dart:convert';
+
 import 'package:flutter/material.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:share_plus/share_plus.dart';
 
 import '../api.dart';
 import '../app_state.dart';
@@ -248,6 +251,13 @@ class AccountScreen extends StatelessWidget {
                 if (user != null) ...[
                   const SizedBox(height: 16),
                   _group([
+                    _tile(
+                      Icons.download_rounded,
+                      AppColors.blue,
+                      s.exportData,
+                      () => _exportData(context),
+                      trailing: false,
+                    ),
                     _tile(Icons.logout_rounded, AppColors.muted, s.signOut, state.signOut, trailing: false),
                     _tile(
                       Icons.delete_forever_rounded,
@@ -315,6 +325,75 @@ class AccountScreen extends StatelessWidget {
     } catch (error) {
       if (context.mounted) showMessage(context, s.error(error));
     }
+  }
+
+  /// TK-07: the account's data as a JSON file, asked with the password, handed to the share sheet so it can be
+  /// saved (Files, Drive) or sent. The server allows 5 a hour; its message is shown in the dialog.
+  Future<void> _exportData(BuildContext context) async {
+    final s = S.of(context);
+    final api = AppScope.read(context).api;
+    final password = TextEditingController();
+    String? error;
+    var busy = false;
+
+    final data = await showDialog<Object>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) => AlertDialog(
+          title: Text(s.exportData),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(s.exportExplain),
+              const SizedBox(height: 12),
+              TextField(
+                controller: password,
+                obscureText: true,
+                decoration: InputDecoration(labelText: s.currentPassword),
+              ),
+              if (error != null) ...[
+                const SizedBox(height: 12),
+                Text(error!, style: TextStyle(color: Theme.of(dialogContext).colorScheme.error)),
+              ],
+            ],
+          ),
+          actions: [
+            TextButton(onPressed: () => Navigator.pop(dialogContext), child: Text(s.cancel)),
+            FilledButton(
+              onPressed: busy
+                  ? null
+                  : () async {
+                      setDialogState(() => busy = true);
+                      try {
+                        final json = await api.post('/account/export', {'password': password.text});
+                        if (dialogContext.mounted) Navigator.pop(dialogContext, json);
+                      } catch (e) {
+                        setDialogState(() {
+                          busy = false;
+                          error = s.error(e);
+                        });
+                      }
+                    },
+              child: Text(s.exportSubmit),
+            ),
+          ],
+        ),
+      ),
+    );
+    password.dispose();
+    if (data == null) return;
+
+    final bytes = utf8.encode(const JsonEncoder.withIndent('  ').convert(data));
+    final name = 'vnbadminton-data-${venueDate(DateTime.now())}.json';
+    await SharePlus.instance.share(
+      ShareParams(
+        files: [XFile.fromData(bytes, mimeType: 'application/json', name: name)],
+        fileNameOverrides: [name],
+        subject: s.exportData,
+        text: s.exportReady,
+      ),
+    );
   }
 
   Future<void> _deleteAccount(BuildContext context) async {

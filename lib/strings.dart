@@ -239,6 +239,15 @@ class S {
   String get saved => _('Đã lưu.', 'Saved.');
   String get contactVenue => _('Liên hệ sân', 'Contact the venue');
   String get call => _('Gọi điện', 'Call');
+  // Data export (TK-07), same wording as the web's account page.
+  String get exportData => _('Tải dữ liệu của tôi', 'Download my data');
+  String get exportExplain => _(
+    'Một file JSON gồm thông tin tài khoản, mọi lượt đặt kèm lịch sử, các khoản thanh toán và chuyển khoản của bạn. Nhập mật khẩu để tải.',
+    'A JSON file with your account details, every booking with its history, your payments and transfers. Enter your password to download it.',
+  );
+  String get currentPassword => _('Mật khẩu hiện tại', 'Current password');
+  String get exportSubmit => _('Tải file dữ liệu (JSON)', 'Download my data (JSON)');
+  String get exportReady => _('Dữ liệu của bạn: lưu file hoặc gửi đi.', 'Your data: save the file or send it.');
   String get deleteAccount => _('Xoá tài khoản', 'Delete account');
   String get deleteExplain => _(
     'Tài khoản và dữ liệu cá nhân của bạn sẽ bị xoá. Nếu còn sân sắp chơi, tài khoản bị khoá ngay và xoá hẳn sau khi chơi xong. Nhập mật khẩu để xác nhận.',

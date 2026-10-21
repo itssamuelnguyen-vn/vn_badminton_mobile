@@ -1,0 +1,37 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+# A new push to a pull request cancels its older run; runs on main are never cancelled.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          flutter-version: 3.47.7
+          cache: true
+
+      - run: flutter pub get
+
+      # Page width 120 (analysis_options.yaml).
+      - run: dart format --output=none --set-exit-if-changed lib test
+
+      # config/dev.json (the server address) is not committed: analyze and test do not need it.
+      - run: flutter analyze
+
+      - run: flutter test

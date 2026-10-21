@@ -7,8 +7,8 @@ import 'models.dart';
 
 /// Who is signed in, the app's language and the venue, shared by every screen (AppScope.of(context)).
 class AppState extends ChangeNotifier {
-  AppState() : api = Api(apiUrl) {
-    api.onUnauthorized = () => _forget();
+  AppState({Api? api}) : api = api ?? Api(apiUrl) {
+    this.api.onUnauthorized = () => _forget();
   }
 
   final Api api;

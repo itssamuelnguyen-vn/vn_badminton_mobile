@@ -1,8 +1,24 @@
+import java.net.URI
+import java.util.Base64
+
 plugins {
     id("com.android.application")
     // The Flutter Gradle Plugin must be applied after the Android and Kotlin Gradle plugins.
     id("dev.flutter.flutter-gradle-plugin")
 }
+
+// The server's host, for the App Links of AndroidManifest.xml (docs/app-links.md). It comes from API_URL in
+// config/dev.json: Flutter hands the dart-defines to Gradle as the "dart-defines" property, each one
+// base64-encoded ("API_URL=https://..."), separated by commas.
+val dartDefines: Map<String, String> =
+    (project.findProperty("dart-defines") as String?).orEmpty()
+        .split(",")
+        .filter { it.isNotBlank() }
+        .map { String(Base64.getDecoder().decode(it)).split("=", limit = 2) }
+        .filter { it.size == 2 }
+        .associate { it[0] to it[1] }
+val appLinkHost: String =
+    dartDefines["API_URL"]?.let { runCatching { URI(it).host }.getOrNull() } ?: "example.invalid"
 
 android {
     namespace = "com.vnbadminton.vn_badminton_mobile"
@@ -27,6 +43,8 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        // No API_URL (e.g. `flutter build` without config/dev.json): the links point nowhere.
+        manifestPlaceholders["appLinkHost"] = appLinkHost
     }
 
     buildTypes {

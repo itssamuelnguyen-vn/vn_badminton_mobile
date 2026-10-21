@@ -1,6 +1,6 @@
 # Quy tắc nghiệp vụ của app khách
 
-Cập nhật: 20/10/2026 (tiện ích: đổi giờ, thuê thêm, bảng tin, chờ sân trống, đánh giá, lịch, chia sẻ, lịch cố định; ưu đãi: hạng, mã giảm giá, gói giờ; giao lưu, nhóm)
+Cập nhật: 21/10/2026 (tải dữ liệu, link email mở trong app, thêm vào lịch của điện thoại)
 
 Máy chủ (repo [vn_badminton](https://github.com/itssamuelnguyen-vn/vn_badminton), `docs/business-rules.md`) **quyết định mọi quy tắc**:
 giờ mở cửa, giá, giới hạn đặt sân, hạn huỷ, thanh toán... App chỉ hiển thị và gửi yêu cầu; khi app và máy chủ khác nhau thì máy chủ đúng.
@@ -14,6 +14,7 @@ File này ghi những gì **app tự làm** (hiển thị, kiểm tra trước, 
 | APP-02 | Giờ luôn hiện theo **giờ của sân (UTC+7)**, dù điện thoại đặt múi giờ khác.                                                                                      |         | `lib/format.dart`                         |
 | APP-03 | **Tiếng Việt** (mặc định) và **English**. Đổi ngôn ngữ thì lưu trên máy và vào tài khoản; mọi yêu cầu gửi `Accept-Language` để máy chủ trả thông báo đúng tiếng. | AP-03   | `lib/strings.dart`, `lib/app_state.dart`  |
 | APP-04 | Địa chỉ máy chủ lấy từ `config/dev.json` (`API_URL`) lúc build; thiếu thì app chỉ báo "Chưa cấu hình địa chỉ máy chủ".                                           |         | `lib/api.dart`, `lib/screens/home_shell.dart` |
+| APP-05 | **Link trong email mở thẳng app** (Android App Links, `docs/app-links.md`): `/payments/<mã>` → màn chuyển khoản, `/bookings/<mã>` → lượt đặt, `/bookings` → tab Sân đã đặt (cả `/en/...`); chưa đăng nhập thì đăng nhập trước; link khác của máy chủ mở màn hình chính. Tên miền lấy từ `API_URL` lúc build. | AP-04 | `lib/deep_links.dart`, `lib/screens/home_shell.dart` |
 
 ## 2. Tài khoản
 
@@ -23,6 +24,7 @@ File này ghi những gì **app tự làm** (hiển thị, kiểm tra trước, 
 | APP-11 | Đăng ký phải **đồng ý chính sách quyền riêng tư** (có link đọc).                                                                                                                                | TK-01      | `lib/screens/auth_screens.dart`      |
 | APP-12 | **Ảnh đại diện** thu nhỏ trên máy (tối đa 512 px, chất lượng 85) trước khi gửi; máy chủ nhận ≤ 2 MB. Năm sinh, giới tính, trình độ **không bắt buộc**; năm sinh từ 1900 tới năm nay.            | TK-10      | `lib/screens/profile_screen.dart`    |
 | APP-13 | **Xoá tài khoản**: hỏi mật khẩu; máy chủ không cho xoá (còn lượt phải chơi/chờ chuyển khoản) thì báo lý do. Xoá xong app đăng xuất và báo ngày xoá hẳn (nếu có).                                | TK-08      | `lib/screens/account_screen.dart`    |
+| APP-15 | **Tải dữ liệu của tôi** (Tài khoản): hỏi mật khẩu hiện tại, máy chủ trả file JSON (sai mật khẩu, quá 5 lần/giờ thì báo lỗi của máy chủ trong hộp thoại); app mở **bảng chia sẻ** của Android với file `vnbadminton-data-<ngày>.json` để lưu hoặc gửi. | TK-07 | `lib/screens/account_screen.dart` |
 | APP-14 | **Khoá bằng vân tay/khuôn mặt** (tuỳ chọn): bật phải xác thực thành công một lần; khi bật, app hỏi lúc mở và khi quay lại sau **5 phút** ở nền. Máy không có khoá màn hình thì không bật được. |            | `lib/app_lock.dart`, `lib/screens/settings_screen.dart` |
 
 ## 3. Đặt sân
@@ -57,7 +59,7 @@ File này ghi những gì **app tự làm** (hiển thị, kiểm tra trước, 
 |--------|-----------------------------------------------------------------------------------------------------------------------------------------------|----------------|-------------------------------------|
 | APP-40 | Bốn tab: **Đặt sân**, **Sân đã đặt**, **Giao lưu**, **Tài khoản**. Danh sách sân đã đặt **tải lại mỗi lần mở tab**: chờ chuyển khoản, sắp tới, đã qua/đã huỷ.                                                               |                | `lib/screens/home_shell.dart`       |
 | APP-42 | **Đánh giá** (1–5 sao + góp ý) khi máy chủ cho (`can_review`: đã nhận sân, đã chơi xong, trong 14 ngày), một lần; sau đó hiện đánh giá đã gửi. | TI-03 | `lib/screens/booking_screen.dart` |
-| APP-43 | **Thêm vào lịch** (mở trang tạo sự kiện của Google Calendar, điền sẵn sân, giờ, địa chỉ) và **Chia sẻ** (Zalo, Messenger… qua bảng chia sẻ của Android) cho lượt **đã xác nhận chưa chơi**. Chia sẻ hỏi **số người chơi** (1–20) và ghi **mỗi người góp** = tổng (sân + đồ) ÷ số người, **làm tròn lên nghìn đồng**. App không thu hộ. | | `lib/screens/booking_screen.dart` |
+| APP-43 | **Thêm vào lịch** (mở **ứng dụng lịch của điện thoại** với sự kiện điền sẵn sân, giờ, địa chỉ; máy không có ứng dụng lịch thì mở trang Google Calendar) và **Chia sẻ** (Zalo, Messenger… qua bảng chia sẻ của Android) cho lượt **đã xác nhận chưa chơi**. Chia sẻ hỏi **số người chơi** (1–20) và ghi **mỗi người góp** = tổng (sân + đồ) ÷ số người, **làm tròn lên nghìn đồng**. App không thu hộ. | | `lib/screens/booking_screen.dart`, `lib/calendar.dart` |
 | APP-45 | **Hạng thành viên** (thẻ màu theo hạng ở tab Tài khoản, tải lại mỗi lần mở tab): tên hạng, mức giảm, số giờ chơi 12 tháng, thanh tiến tới **hạng kế tiếp**; ẩn khi sân tắt chương trình. | UD-01 | `lib/screens/account_screen.dart` |
 | APP-46 | **Gói giờ** (Tài khoản): gói của tôi (còn bao nhiêu giờ, hạn, khung giờ dùng được; gói chưa chuyển khoản có nút mở lại màn chuyển khoản) và **gói đang bán** (nút **Mua** → màn chuyển khoản). | UD-04 | `lib/screens/packages_screen.dart` |
 | APP-47 | Tab **Giao lưu** (tab thứ 3): các buổi sắp tới (ngày, giờ, sân, trình độ, giá mỗi người, thanh số chỗ đã có người, "Hết chỗ"); xem được khi chưa đăng nhập. **Đăng ký**: chọn số người (1–10, không quá số chỗ còn), thấy tổng tiền, mở màn chuyển khoản. Chỗ của mình hiện trong thẻ buổi (chờ chuyển khoản: nút mở lại; **Huỷ chỗ** khi máy chủ cho, cảnh báo không hoàn tiền). | GL-01…03 | `lib/screens/play_screen.dart` |
