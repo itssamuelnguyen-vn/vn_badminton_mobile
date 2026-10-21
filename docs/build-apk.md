@@ -36,6 +36,9 @@ Khi gửi bản mới cho khách: tăng `version` và thêm mục vào `releases
 ## Khi có lỗi
 
 - **Lỗi lạ sau khi đổi thư viện / pull code mới:** `flutter clean`, `flutter pub get`, rồi build lại (lần này lâu như lần đầu).
+- **App mở ra chỉ có màn hình trắng (chỉ bản release):** R8 đã xoá hoặc đổi tên một class mà plugin gọi qua JNI.
+  Cắm cáp, mở app rồi xem `adb logcat | findstr flutter`: lỗi `NoSuchMethodError` / `ClassNotFoundException` cho biết
+  class nào, thêm `-keep class ...` cho nó vào `android/app/proguard-rules.pro` (đã có sẵn luật cho `shared_preferences`).
 - **`OutOfMemoryError` hoặc build treo ở bước R8:** RAM cho Gradle là `org.gradle.jvmargs=-Xmx3g` trong
   `android/gradle.properties`; đóng bớt ứng dụng, hoặc tăng lên `-Xmx4g`.
 - **App mở được nhưng không tải được dữ liệu:** server trong APK không còn chạy (tunnel đã đổi URL hoặc WSL đã tắt).
