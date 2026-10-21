@@ -11,3 +11,8 @@ Flutter app (Android first) for the customers of the VN Badminton court booking 
 2. `flutter run --dart-define-from-file=config/dev.json` (`.vscode/launch.json` passes it).
 
 `config/dev.json` is not committed.
+
+## Build an APK
+
+`Ctrl+Shift+B` in VS Code (or `tool/build_apk.ps1`) builds `build\apk\vnbadminton-<version>.apk`.
+Steps, timings and troubleshooting: [`docs/build-apk.md`](docs/build-apk.md).
