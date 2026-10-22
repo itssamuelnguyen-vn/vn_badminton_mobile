@@ -3,6 +3,7 @@ import 'package:share_plus/share_plus.dart';
 
 import '../api.dart';
 import '../app_state.dart';
+import '../calendar.dart';
 import '../format.dart';
 import '../models.dart';
 import '../strings.dart';
@@ -40,18 +41,16 @@ class _BookingScreenState extends State<BookingScreen> {
     if (moved == true) _reload();
   }
 
-  /// Google Calendar's "new event" page, filled in (opens the Calendar app when installed).
+  /// The phone's calendar app with the booking filled in (Google Calendar on the web without one).
   void _addToCalendar() {
     final venue = AppScope.read(context).venue;
-    String utc(DateTime time) => '${time.toUtc().toIso8601String().replaceAll(RegExp(r'[-:]'), '').split('.').first}Z';
-    final uri = Uri.https('calendar.google.com', '/calendar/render', {
-      'action': 'TEMPLATE',
-      'text': 'Cầu lông · ${_booking.court.name}',
-      'dates': '${utc(_booking.startsAt)}/${utc(_booking.endsAt)}',
-      'details': '${venue?.name ?? 'VN Badminton'} · ${_booking.code}',
-      'location': venue?.address ?? '',
-    });
-    openLink(uri.toString());
+    addToCalendar(
+      title: 'Cầu lông · ${_booking.court.name}',
+      start: _booking.startsAt,
+      end: _booking.endsAt,
+      location: venue?.address ?? '',
+      description: '${venue?.name ?? 'VN Badminton'} · ${_booking.code}',
+    );
   }
 
   Future<void> _share() async {

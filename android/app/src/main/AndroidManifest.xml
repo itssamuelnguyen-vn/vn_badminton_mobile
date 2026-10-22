@@ -3,6 +3,8 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <!-- Opening the app with a fingerprint or the face (local_auth). -->
     <uses-permission android:name="android.permission.USE_BIOMETRIC"/>
+    <!-- Push notifications (Android 13+ asks the customer, lib/push.dart). -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
     <application
         android:label="VN Badminton"
         android:name="${applicationName}"
@@ -28,7 +30,35 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- Links of the server's emails open in the app (Android App Links, docs/app-links.md): the payment page
+                 and the bookings, with or without /en. The host is the API_URL of the build (build.gradle.kts);
+                 the server proves the link with /.well-known/assetlinks.json. -->
+            <intent-filter android:autoVerify="true">
+                <action android:name="android.intent.action.VIEW"/>
+                <category android:name="android.intent.category.DEFAULT"/>
+                <category android:name="android.intent.category.BROWSABLE"/>
+                <data android:scheme="https" android:host="${appLinkHost}"/>
+                <data android:path="/bookings"/>
+                <data android:path="/en/bookings"/>
+                <data android:pathPrefix="/bookings/"/>
+                <data android:pathPrefix="/en/bookings/"/>
+                <data android:pathPrefix="/payments/"/>
+                <data android:pathPrefix="/en/payments/"/>
+            </intent-filter>
+            <!-- The links are handled by app_links (lib/deep_links.dart), not by Flutter's router. -->
+            <meta-data android:name="flutter_deeplinking_enabled" android:value="false"/>
         </activity>
+        <!-- Push notifications shown by Android while the app is closed: the app's channel (created by lib/push.dart,
+             also named on the server: Push::Fcm::CHANNEL_ID), the small icon and its colour. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="updates" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_icon"
+            android:resource="@drawable/ic_notification" />
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_color"
+            android:resource="@color/notification" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data
@@ -53,6 +83,11 @@
         <intent>
             <action android:name="android.intent.action.DIAL"/>
             <data android:scheme="tel"/>
+        </intent>
+        <!-- "Add to calendar": the phone's calendar app (MainActivity.kt). -->
+        <intent>
+            <action android:name="android.intent.action.INSERT"/>
+            <data android:mimeType="vnd.android.cursor.dir/event"/>
         </intent>
     </queries>
 </manifest>

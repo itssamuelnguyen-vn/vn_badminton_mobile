@@ -49,3 +49,6 @@ app.*.map.json
 
 # Written by start-tunnel (the tunnel URL changes)
 /config/dev.json
+
+# Firebase's settings for the Android app (push notifications): downloaded from the Firebase console, see docs/firebase.md
+/android/app/google-services.json

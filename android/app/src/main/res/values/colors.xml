@@ -2,4 +2,6 @@
 <resources>
     <!-- The cream of the web's logo (badminton_logo.jpg). -->
     <color name="ic_launcher_background">#EFEBE0</color>
+    <!-- The accent of the push notifications (AppColors.primary). -->
+    <color name="notification">#059669</color>
 </resources>

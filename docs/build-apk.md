@@ -15,7 +15,7 @@ Khi chỉ chạy thử trên máy mình thì vẫn dùng `F5` / `flutter run` nh
 3. **Chờ.** Lần đầu (hoặc sau `flutter clean`) khoảng **7 phút**, các lần sau khoảng **2 phút**.
    Cuối cùng terminal in ra:
    ```
-   APK: D:\dev\vn_badminton_mobile\build\apk\vnbadminton-0.5.0.apk
+   APK: D:\dev\vn_badminton_mobile\build\apk\vnbadminton-0.6.0.apk
    Server: https://....trycloudflare.com
    ```
    Xem lại dòng **Server** cho đúng địa chỉ muốn dùng.
@@ -46,6 +46,11 @@ Khi gửi bản mới cho khách: tăng `version` và thêm mục vào `releases
 
 ## Lưu ý
 
+- **Thông báo đẩy** cần `android/app/google-services.json` (không commit, cách lấy: [`firebase.md`](firebase.md)).
+  Thiếu file thì APK vẫn build được (Gradle cảnh báo) nhưng không nhận thông báo.
+
+- Link trong email chỉ mở thẳng app khi tên miền của `API_URL` khớp và máy chủ biết vân tay khoá ký:
+  xem [`app-links.md`](app-links.md).
 - APK hiện ký bằng **khoá debug**: cài thử thoải mái, nhưng **không đưa lên Google Play** được.
   Trước khi phát hành phải tạo keystore riêng (cấu hình `signingConfig` trong `android/app/build.gradle.kts`).
 - `config/dev.json` không được commit.

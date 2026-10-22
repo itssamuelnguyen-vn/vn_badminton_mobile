@@ -16,7 +16,7 @@ When a change adds, removes or changes app behaviour, update that file in the sa
 - Colours, gradients and the theme are in `lib/theme.dart`; shared widgets in `lib/widgets.dart`.
 - Times are shown in the venue's time (UTC+7) with the helpers of `lib/format.dart`.
 - Add an entry to `releases` in `lib/screens/whats_new_screen.dart` with every version sent to customers.
-- Before committing: `flutter analyze` (no issues).
+- Before committing: `flutter analyze` (no issues) and `flutter test`; CI (`.github/workflows/ci.yml`) runs them with `dart format`.
 - `config/dev.json` (the server URL) is not committed.
 
 ## GitHub usage

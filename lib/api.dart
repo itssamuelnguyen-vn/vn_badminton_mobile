@@ -29,10 +29,11 @@ class ApiError implements Exception {
 
 /// The JSON API of the server (`/api/v1`, see docs/api.md in the web app).
 class Api {
-  Api(this.baseUrl);
+  /// [client] is replaced by a fake one in the tests (package:http/testing.dart).
+  Api(this.baseUrl, {http.Client? client}) : _client = client ?? http.Client();
 
   final String baseUrl;
-  final _client = http.Client();
+  final http.Client _client;
 
   String? token;
   String locale = 'vi';

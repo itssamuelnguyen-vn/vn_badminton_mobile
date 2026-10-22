@@ -17,6 +17,32 @@ class Release {
 
 const releases = [
   Release(
+    '0.7.0',
+    '21/10/2026',
+    [
+      'Thông báo: sân báo khi xác nhận đặt sân, nhắc trước giờ chơi và khi lịch có thay đổi. Bấm vào để mở đúng lượt đặt. Tắt được trong Cài đặt.',
+      'Đăng nhập với Google: không cần nhớ mật khẩu; lần đầu chỉ cần thêm số điện thoại.',
+    ],
+    [
+      'Notifications: the venue tells you when a booking is confirmed, reminds you before you play and tells you about changes. Tap one to open the booking. Turn them off in Settings.',
+      'Sign in with Google: no password to remember; the first time, just add your phone number.',
+    ],
+  ),
+  Release(
+    '0.6.0',
+    '21/10/2026',
+    [
+      'Link trong email (chuyển khoản, lượt đặt) mở thẳng trong app.',
+      'Thêm vào lịch bằng ứng dụng lịch của điện thoại.',
+      'Tải dữ liệu của tôi: lưu hoặc gửi file dữ liệu tài khoản.',
+    ],
+    [
+      'Links in our emails (payment, booking) open right in the app.',
+      "Add to calendar with your phone's calendar app.",
+      'Download my data: save or send your account data file.',
+    ],
+  ),
+  Release(
     '0.5.0',
     '20/10/2026',
     [

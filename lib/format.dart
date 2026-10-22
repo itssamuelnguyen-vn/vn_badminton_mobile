@@ -16,10 +16,10 @@ String hhmm(DateTime time) => DateFormat('HH:mm').format(venueTime(time));
 
 String timeRange(DateTime from, DateTime to) => '${hhmm(from)}–${hhmm(to)}';
 
-/// "T3, 20/10/2026" (vi) or "Tue, 20/10/2026" (en).
+/// "Thứ 3, 20/10/2026" (vi) or "Tue, 20/10/2026" (en).
 String longDate(DateTime time, String locale) => DateFormat('EEE, dd/MM/yyyy', locale).format(venueTime(time));
 
-/// "T3" (vi) or "Tue" (en), and "20", for a date the API gives as "2026-10-20".
+/// "Thứ 3" (vi) or "Tue" (en), and "20", for a date the API gives as "2026-10-20".
 String weekdayShort(String isoDate, String locale) => DateFormat('EEE', locale).format(DateTime.parse(isoDate));
 
 String dayOfMonth(String isoDate) => DateFormat('dd').format(DateTime.parse(isoDate));

@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- The small icon of the push notifications: a shuttlecock, white on transparent as Android requires. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24">
+    <!-- The feathers: a cone with two gaps. -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M5,3h3.2l1.4,12h-1.8zM10.4,3h3.2l-0.4,12h-2.4zM15.8,3h3.2l-2.8,12h-1.8z" />
+    <!-- The cork. -->
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M7.5,16.2h9v1.3a4.5,4.5 0,0 1,-9 0z" />
+</vector>
