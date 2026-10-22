@@ -7,6 +7,14 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
+// Firebase's settings for push notifications come from google-services.json, which is not committed
+// (docs/firebase.md). Without it the app still builds and runs, only without push notifications.
+if (file("google-services.json").exists()) {
+    apply(plugin = "com.google.gms.google-services")
+} else {
+    logger.warn("android/app/google-services.json is missing: this build gets no push notifications (docs/firebase.md)")
+}
+
 // The server's host, for the App Links of AndroidManifest.xml (docs/app-links.md). It comes from API_URL in
 // config/dev.json: Flutter hands the dart-defines to Gradle as the "dart-defines" property, each one
 // base64-encoded ("API_URL=https://..."), separated by commas.
@@ -28,6 +36,8 @@ android {
     compileOptions {
         sourceCompatibility = JavaVersion.VERSION_17
         targetCompatibility = JavaVersion.VERSION_17
+        // flutter_local_notifications uses java.time on every Android version.
+        isCoreLibraryDesugaringEnabled = true
     }
 
     defaultConfig {
@@ -35,7 +45,8 @@ android {
         applicationId = "com.vnbadminton.vn_badminton_mobile"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        // Firebase (BoM 35), google_sign_in and flutter_local_notifications need Android 7.0 (API 24).
+        minSdk = maxOf(flutter.minSdkVersion, 24)
         targetSdk = flutter.targetSdkVersion
         // Uses the version code from pubspec.yaml. When using split APKs, 1000 * ABI_VERSION
         // is added automatically by Flutter. (https://developer.android.com/studio/build/configure-apk-splits#configure-APK-versions)
@@ -70,4 +81,5 @@ flutter {
 dependencies {
     // For the AppCompat launch theme (see res/values/styles.xml).
     implementation("androidx.appcompat:appcompat:1.7.1")
+    coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.5")
 }

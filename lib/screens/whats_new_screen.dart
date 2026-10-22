@@ -17,6 +17,18 @@ class Release {
 
 const releases = [
   Release(
+    '0.7.0',
+    '21/10/2026',
+    [
+      'Thông báo: sân báo khi xác nhận đặt sân, nhắc trước giờ chơi và khi lịch có thay đổi. Bấm vào để mở đúng lượt đặt. Tắt được trong Cài đặt.',
+      'Đăng nhập với Google: không cần nhớ mật khẩu; lần đầu chỉ cần thêm số điện thoại.',
+    ],
+    [
+      'Notifications: the venue tells you when a booking is confirmed, reminds you before you play and tells you about changes. Tap one to open the booking. Turn them off in Settings.',
+      'Sign in with Google: no password to remember; the first time, just add your phone number.',
+    ],
+  ),
+  Release(
     '0.6.0',
     '21/10/2026',
     [

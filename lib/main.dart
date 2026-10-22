@@ -6,6 +6,7 @@ import 'app_lock.dart';
 import 'app_state.dart';
 import 'deep_links.dart';
 import 'screens/home_shell.dart';
+import 'strings.dart';
 import 'theme.dart';
 
 Future<void> main() async {
@@ -17,6 +18,8 @@ Future<void> main() async {
   listenToLinks();
   await state.load();
   runApp(AppScope(state: state, child: const VnBadmintonApp()));
+  // After the first frame is on its way; a notification that opened the app is kept until the home screen shows it.
+  state.startPush(channelName: S(state.locale).notificationChannel, onOpen: openPath);
 }
 
 class VnBadmintonApp extends StatelessWidget {

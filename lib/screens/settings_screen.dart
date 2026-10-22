@@ -6,9 +6,45 @@ import '../strings.dart';
 import '../theme.dart';
 import '../widgets.dart';
 
-/// Language and the fingerprint lock. (Notifications come with push.)
+/// After signing in (and at start for those signed in before): asks once, with a word on what they are for, to allow
+/// notifications. Nothing to ask when they are already allowed (before Android 13) or push is not set up.
+Future<void> askForNotifications(BuildContext context) async {
+  final state = AppScope.read(context);
+  if (state.notificationsAsked || !state.signedIn || !state.notifications) return;
+  if (!await state.push.start() || await state.push.permissionGranted()) return;
+  if (!context.mounted) return;
+  await state.markNotificationsAsked();
+  if (!context.mounted) return;
+  final s = S.of(context);
+  final allow = await showDialog<bool>(
+    context: context,
+    builder: (context) => AlertDialog(
+      icon: const Icon(Icons.notifications_active_rounded, color: AppColors.primary),
+      title: Text(s.notificationsAskTitle),
+      content: Text(s.notificationsAskText),
+      actions: [
+        TextButton(onPressed: () => Navigator.pop(context, false), child: Text(s.notLater)),
+        FilledButton(onPressed: () => Navigator.pop(context, true), child: Text(s.notificationsAllow)),
+      ],
+    ),
+  );
+  // "Not now" or refused in Android's question: the switch in Settings shows them off, where to turn them on later.
+  if (allow != true || !await state.setNotifications(true)) await state.setNotifications(false);
+}
+
+/// Language, notifications and the fingerprint lock.
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
+
+  Future<void> _toggleNotifications(BuildContext context, bool value) async {
+    final s = S.of(context);
+    final state = AppScope.read(context);
+    if (value && !await state.push.start()) {
+      if (context.mounted) showMessage(context, s.notificationsUnavailable);
+      return;
+    }
+    if (!await state.setNotifications(value) && context.mounted) showMessage(context, s.notificationsDenied);
+  }
 
   Future<void> _toggleBiometric(BuildContext context, bool value) async {
     final s = S.of(context);
@@ -64,6 +100,16 @@ class SettingsScreen extends StatelessWidget {
                         ),
                       ),
                     ],
+                  ),
+                ),
+                SoftCard(
+                  padding: const EdgeInsets.symmetric(vertical: 6),
+                  child: SwitchListTile(
+                    secondary: const IconBadge(Icons.notifications_rounded, AppColors.primary),
+                    title: Text(s.notifications),
+                    subtitle: Text(s.notificationsHint),
+                    value: state.signedIn && state.notifications,
+                    onChanged: state.signedIn ? (value) => _toggleNotifications(context, value) : null,
                   ),
                 ),
                 SoftCard(

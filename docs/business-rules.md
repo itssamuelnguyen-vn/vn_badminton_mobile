@@ -1,6 +1,6 @@
 # Quy tắc nghiệp vụ của app khách
 
-Cập nhật: 21/10/2026 (tải dữ liệu, link email mở trong app, thêm vào lịch của điện thoại)
+Cập nhật: 21/10/2026 (thông báo đẩy, đăng nhập với Google)
 
 Máy chủ (repo [vn_badminton](https://github.com/itssamuelnguyen-vn/vn_badminton), `docs/business-rules.md`) **quyết định mọi quy tắc**:
 giờ mở cửa, giá, giới hạn đặt sân, hạn huỷ, thanh toán... App chỉ hiển thị và gửi yêu cầu; khi app và máy chủ khác nhau thì máy chủ đúng.
@@ -25,6 +25,7 @@ File này ghi những gì **app tự làm** (hiển thị, kiểm tra trước, 
 | APP-12 | **Ảnh đại diện** thu nhỏ trên máy (tối đa 512 px, chất lượng 85) trước khi gửi; máy chủ nhận ≤ 2 MB. Năm sinh, giới tính, trình độ **không bắt buộc**; năm sinh từ 1900 tới năm nay.            | TK-10      | `lib/screens/profile_screen.dart`    |
 | APP-13 | **Xoá tài khoản**: hỏi mật khẩu; máy chủ không cho xoá (còn lượt phải chơi/chờ chuyển khoản) thì báo lý do. Xoá xong app đăng xuất và báo ngày xoá hẳn (nếu có).                                | TK-08      | `lib/screens/account_screen.dart`    |
 | APP-15 | **Tải dữ liệu của tôi** (Tài khoản): hỏi mật khẩu hiện tại, máy chủ trả file JSON (sai mật khẩu, quá 5 lần/giờ thì báo lỗi của máy chủ trong hộp thoại); app mở **bảng chia sẻ** của Android với file `vnbadminton-data-<ngày>.json` để lưu hoặc gửi. | TK-07 | `lib/screens/account_screen.dart` |
+| APP-16 | **Đăng nhập với Google** (màn đăng nhập và đăng ký): chọn tài khoản Google của máy, app gửi ID token cho máy chủ. Tài khoản đã có (cùng Google hoặc cùng email) → vào luôn. **Người mới** → màn **Hoàn tất đăng ký**: họ tên (lấy từ Google, sửa được), **số điện thoại**, **đồng ý chính sách bảo mật**; email của Google đã xác minh nên không cần email xác minh. Đóng màn chọn tài khoản thì không làm gì. Đăng xuất thì quên tài khoản Google đã chọn. | AP-05 | `lib/google_auth.dart`, `lib/screens/auth_screens.dart`, `lib/app_state.dart` |
 | APP-14 | **Khoá bằng vân tay/khuôn mặt** (tuỳ chọn): bật phải xác thực thành công một lần; khi bật, app hỏi lúc mở và khi quay lại sau **5 phút** ở nền. Máy không có khoá màn hình thì không bật được. |            | `lib/app_lock.dart`, `lib/screens/settings_screen.dart` |
 
 ## 3. Đặt sân
@@ -73,4 +74,5 @@ File này ghi những gì **app tự làm** (hiển thị, kiểm tra trước, 
 | Mã     | Quy tắc                                                                                                       | Máy chủ | Nguồn                                  |
 |--------|---------------------------------------------------------------------------------------------------------------|---------|----------------------------------------|
 | APP-50 | **Có gì mới**: mỗi phiên bản gửi cho khách thêm một mục trong `releases` (mới nhất trước).                   |         | `lib/screens/whats_new_screen.dart`    |
+| APP-52 | **Thông báo đẩy** (Firebase): sau khi đăng nhập app gửi **token** của máy cho máy chủ, gửi lại mỗi lần mở app và khi Firebase đổi token; **đăng xuất** thì xoá token trên máy chủ. Android 13+: hỏi quyền **một lần** sau khi đăng nhập (hoặc lần mở app đầu tiên của bản 0.7.0 nếu đã đăng nhập), có lời giải thích; "Để sau" hoặc từ chối thì công tắc **Thông báo** trong Cài đặt tắt. Công tắc tắt = xoá token trên máy chủ; bật = hỏi quyền nếu cần rồi gửi lại token. Thông báo đến khi đang mở app cũng hiện (kênh "Lượt đặt và nhắc lịch" / "Bookings and reminders" theo ngôn ngữ app). **Bấm thông báo** (app đang mở, ở nền hay đã tắt) mở trang như link email (APP-05). Bản build thiếu `google-services.json` thì không có thông báo (`docs/firebase.md`). | TB-01…04 | `lib/push.dart`, `lib/app_state.dart`, `lib/screens/settings_screen.dart`, `lib/deep_links.dart` |
 | APP-51 | Liên hệ: gọi, Zalo, Messenger và **chỉ đường** (Google Maps theo địa chỉ sân) chỉ hiện kênh chủ sân đã nhập. | CS-05   | `lib/screens/account_screen.dart`      |

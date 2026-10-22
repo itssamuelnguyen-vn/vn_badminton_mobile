@@ -5,7 +5,8 @@ import 'package:flutter/foundation.dart';
 
 import 'api.dart';
 
-/// Where a link of the server's emails leads in the app (Android App Links, see docs/app-links.md).
+/// Where a link of the server's emails or a push notification leads in the app (Android App Links, see
+/// docs/app-links.md; push.dart).
 enum LinkTarget { payment, booking, bookings, home }
 
 class DeepLink {
@@ -48,6 +49,12 @@ DeepLink? parseDeepLink(Uri uri, {String? host}) {
 /// The last link the app was opened with, until the home screen shows it (it may arrive before the screen is
 /// built, e.g. while the app lock asks for the fingerprint).
 final pendingLink = ValueNotifier<DeepLink?>(null);
+
+/// The page of a push notification tapped (`data.path`, e.g. `/bookings/K7Q2M9XA`), opened like a link.
+void openPath(String path) {
+  final uri = Uri.tryParse(path);
+  if (uri != null) pendingLink.value = parseDeepLink(Uri(path: uri.path));
+}
 
 StreamSubscription<Uri>? _links;
 

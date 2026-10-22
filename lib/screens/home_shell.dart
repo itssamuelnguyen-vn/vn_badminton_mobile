@@ -13,6 +13,7 @@ import 'bookings_screen.dart';
 import 'payment_screen.dart';
 import 'play_screen.dart';
 import 'schedule_screen.dart';
+import 'settings_screen.dart';
 
 /// The four tabs: booking grid, my bookings, open play, account. Also opens the links of the server's emails
 /// (deep_links.dart): the payment page or the booking, after signing in if needed.
@@ -47,7 +48,11 @@ class HomeShellState extends State<HomeShell> {
     super.initState();
     pendingLink.addListener(_openLink);
     // A link that opened the app before this screen was built (cold start, app lock).
-    WidgetsBinding.instance.addPostFrameCallback((_) => _openLink());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _openLink();
+      // Customers signed in before notifications came (0.7.0) are asked once too.
+      if (mounted) askForNotifications(context);
+    });
   }
 
   @override

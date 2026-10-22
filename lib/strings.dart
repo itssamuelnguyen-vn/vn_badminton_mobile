@@ -69,6 +69,17 @@ class S {
     'Đã gửi email xác minh. Mở email và bấm vào liên kết để có thể đặt sân.',
     'A verification email was sent. Open it and follow the link to be able to book.',
   );
+  String get signInWithGoogle => _('Đăng nhập với Google', 'Sign in with Google');
+  String get or => _('hoặc', 'or');
+  String get googleFailed => _(
+    'Chưa đăng nhập được bằng Google. Thử lại, hoặc dùng email và mật khẩu.',
+    'Could not sign in with Google. Try again, or use your email and password.',
+  );
+  String get googleSignupTitle => _('Hoàn tất đăng ký', 'Finish signing up');
+  String googleSignupText(String email) => _(
+    'Bạn đăng nhập bằng Google ($email). Thêm số điện thoại để sân liên hệ khi cần.',
+    'You signed in with Google ($email). Add your phone number so the venue can reach you.',
+  );
   String get signInToContinue => _('Đăng nhập để tiếp tục', 'Sign in to continue');
   String get signInToSeeBookings => _('Đăng nhập để xem các sân bạn đã đặt.', 'Sign in to see your bookings.');
 
@@ -223,6 +234,30 @@ class S {
   String get biometricUnavailable =>
       _('Điện thoại chưa cài vân tay hoặc khoá màn hình.', 'This phone has no fingerprint or screen lock set up.');
   String get unlockReason => _('Mở khoá VN Badminton', 'Unlock VN Badminton');
+
+  // Notifications
+  String get notifications => _('Thông báo', 'Notifications');
+  String get notificationsHint => _(
+    'Xác nhận đặt sân, nhắc giờ chơi, thay đổi từ sân. Không quảng cáo.',
+    'Booking confirmations, reminders, changes by the venue. No ads.',
+  );
+  String get notificationsDenied => _(
+    'Thông báo đang bị tắt cho app. Bật lại trong Cài đặt của điện thoại → Ứng dụng → VN Badminton.',
+    "Notifications are turned off for the app. Turn them on in the phone's Settings → Apps → VN Badminton.",
+  );
+  String get notificationsUnavailable =>
+      _('Bản app này chưa có thông báo.', 'Notifications are not available in this version of the app.');
+
+  /// The Android channel of the notifications, as shown in the phone's settings.
+  String get notificationChannel => _('Lượt đặt và nhắc lịch', 'Bookings and reminders');
+  String get notificationsAskTitle => _('Nhận thông báo?', 'Get notifications?');
+  String get notificationsAskText => _(
+    'Sân sẽ báo khi xác nhận đặt sân, nhắc bạn trước giờ chơi và báo khi lịch có thay đổi. Không có quảng cáo; tắt được bất cứ lúc nào trong Cài đặt.',
+    'The venue lets you know when a booking is confirmed, reminds you before you play and tells you about changes. '
+        'No ads; turn them off any time in Settings.',
+  );
+  String get notificationsAllow => _('Bật thông báo', 'Turn on');
+  String get notLater => _('Để sau', 'Not now');
   String get unlock => _('Mở khoá', 'Unlock');
   String get locked => _('App đang khoá', 'The app is locked');
   String get versionInfo => _('Thông tin phiên bản', 'Version');

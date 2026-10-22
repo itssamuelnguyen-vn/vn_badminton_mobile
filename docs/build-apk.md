@@ -46,6 +46,9 @@ Khi gửi bản mới cho khách: tăng `version` và thêm mục vào `releases
 
 ## Lưu ý
 
+- **Thông báo đẩy** cần `android/app/google-services.json` (không commit, cách lấy: [`firebase.md`](firebase.md)).
+  Thiếu file thì APK vẫn build được (Gradle cảnh báo) nhưng không nhận thông báo.
+
 - Link trong email chỉ mở thẳng app khi tên miền của `API_URL` khớp và máy chủ biết vân tay khoá ký:
   xem [`app-links.md`](app-links.md).
 - APK hiện ký bằng **khoá debug**: cài thử thoải mái, nhưng **không đưa lên Google Play** được.
