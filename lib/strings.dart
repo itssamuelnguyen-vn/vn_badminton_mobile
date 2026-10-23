@@ -153,6 +153,16 @@ class S {
     'The time to transfer is over and the slots were released. If you already transferred, the venue will contact you.',
   );
   String get paymentCancelled => _('Đơn này đã bị huỷ.', 'This order was cancelled.');
+  String get cancelPlaces => _('Huỷ giữ chỗ', 'Cancel places');
+  String get cancelPaymentHint => _(
+    'Không đặt nữa? Huỷ để trả lại chỗ ngay, khỏi chờ hết giờ.',
+    'Changed your mind? Cancel to release the slot now.',
+  );
+  String get cancelPaymentConfirm => _(
+    'Huỷ đơn này và trả lại chỗ đã giữ? Nếu bạn đã chuyển khoản, đừng huỷ – chờ vài phút để hệ thống xác nhận.',
+    'Cancel this order and release what is held? If you already transferred, do not cancel – wait a few minutes for the confirmation.',
+  );
+  String get paymentCancelledNow => _('Đã huỷ, chỗ đã giữ được mở lại.', 'Cancelled; what was held is open again.');
   String get seeMyBookings => _('Xem sân đã đặt', 'See my bookings');
   String get qrUnavailable => _('Không tải được mã QR', 'Could not load the QR code');
 

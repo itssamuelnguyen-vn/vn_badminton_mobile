@@ -318,6 +318,7 @@ class Payment {
       discountVnd = (json['discount_vnd'] as num?)?.toInt() ?? 0,
       offer = json['offer'] as String?,
       purpose = json['purpose'] as String? ?? 'bookings',
+      canCancel = json['can_cancel'] == true,
       bookings = [for (final booking in json['bookings'] as List? ?? const []) Booking.fromJson(booking)];
 
   final String token;
@@ -343,6 +344,9 @@ class Payment {
 
   /// bookings, series_period, package or tickets.
   final String purpose;
+
+  /// The customer can still give up before transferring (TT-11): nothing received yet.
+  final bool canCancel;
 }
 
 /// The customer's member tier (UD-01).
