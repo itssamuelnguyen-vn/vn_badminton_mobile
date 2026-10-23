@@ -545,3 +545,171 @@ class GroupShare {
   final DateTime startsAt;
   final DateTime endsAt;
 }
+
+/// An in-house tournament (GD-01..09): one event, a format, a fee per entry; the customer's own entry if any.
+class Tournament {
+  Tournament.fromJson(Map<String, dynamic> json)
+    : id = json['id'] as int,
+      title = json['title'] as String? ?? '',
+      description = json['description'] as String?,
+      event = json['event'] as String? ?? '',
+      discipline = json['discipline'] as String? ?? 'singles',
+      gender = json['gender'] as String?,
+      playFormat = json['play_format'] as String? ?? 'knockout',
+      level = json['level'] as String?,
+      courts = [for (final court in json['courts'] as List? ?? const []) court as String],
+      startsAt = DateTime.parse(json['starts_at'] as String),
+      endsAt = DateTime.parse(json['ends_at'] as String),
+      registrationClosesAt = DateTime.parse(json['registration_closes_at'] as String),
+      maxEntries = (json['max_entries'] as num?)?.toInt() ?? 0,
+      spotsLeft = (json['spots_left'] as num?)?.toInt() ?? 0,
+      feeVnd = (json['fee_vnd'] as num?)?.toInt() ?? 0,
+      status = json['status'] as String? ?? 'open',
+      registrationOpen = json['registration_open'] == true,
+      myEntry = json['my_entry'] == null ? null : TournamentEntry.fromJson(json['my_entry'] as Map<String, dynamic>),
+      champion = json['champion'] as String?,
+      entries = [
+        for (final entry in json['entries'] as List? ?? const [])
+          TournamentSide.fromJson(entry as Map<String, dynamic>),
+      ],
+      groups = [for (final group in json['groups'] as List? ?? const []) TournamentGroup.fromJson(group)],
+      matches = [for (final match in json['matches'] as List? ?? const []) TournamentMatch.fromJson(match)];
+
+  final int id;
+  final String title;
+  final String? description;
+
+  /// "Đôi nam nữ", "Đơn nữ"… in the app's language.
+  final String event;
+
+  /// singles, doubles or mixed_doubles; gender: male, female or null (open).
+  final String discipline;
+  final String? gender;
+
+  /// knockout, groups_knockout or round_robin.
+  final String playFormat;
+  final String? level;
+  final List<String> courts;
+  final DateTime startsAt;
+  final DateTime endsAt;
+  final DateTime registrationClosesAt;
+  final int maxEntries;
+  final int spotsLeft;
+  final int feeVnd;
+
+  /// open, in_progress, finished or cancelled.
+  final String status;
+  final bool registrationOpen;
+  final TournamentEntry? myEntry;
+
+  /// Only on the tournament's own page (GET /tournaments/:id).
+  final String? champion;
+  final List<TournamentSide> entries;
+  final List<TournamentGroup> groups;
+  final List<TournamentMatch> matches;
+
+  bool get doubles => discipline != 'singles';
+
+  /// Gendered events need the partner's gender.
+  bool get byGender => gender != null || discipline == 'mixed_doubles';
+}
+
+/// The customer's entry (as registrant or partner).
+class TournamentEntry {
+  TournamentEntry.fromJson(Map<String, dynamic> json)
+    : id = json['id'] as int,
+      name = json['name'] as String? ?? '',
+      status = json['status'] as String? ?? 'pending',
+      amountVnd = (json['amount_vnd'] as num?)?.toInt() ?? 0,
+      canCancel = json['can_cancel'] == true,
+      paymentToken = json['payment_token'] as String?;
+
+  final int id;
+  final String name;
+
+  /// pending (awaiting the transfer), confirmed or cancelled.
+  final String status;
+  final int amountVnd;
+  final bool canCancel;
+  final String? paymentToken;
+}
+
+/// A player or pair in the draw.
+class TournamentSide {
+  TournamentSide.fromJson(Map<String, dynamic> json) : id = json['id'] as int, name = json['name'] as String? ?? '';
+
+  final int id;
+  final String name;
+}
+
+/// A group's table: ranked rows.
+class TournamentGroup {
+  TournamentGroup.fromJson(Map<String, dynamic> json)
+    : number = (json['number'] as num?)?.toInt() ?? 1,
+      rows = [for (final row in json['rows'] as List? ?? const []) StandingRow.fromJson(row)];
+
+  final int number;
+  final List<StandingRow> rows;
+
+  /// "A", "B"…
+  String get letter => String.fromCharCode(64 + number);
+}
+
+class StandingRow {
+  StandingRow.fromJson(Map<String, dynamic> json)
+    : entry = TournamentSide.fromJson(json['entry'] as Map<String, dynamic>),
+      played = (json['played'] as num?)?.toInt() ?? 0,
+      won = (json['won'] as num?)?.toInt() ?? 0,
+      gamesFor = (json['games_for'] as num?)?.toInt() ?? 0,
+      gamesAgainst = (json['games_against'] as num?)?.toInt() ?? 0,
+      pointDifference = (json['point_difference'] as num?)?.toInt() ?? 0;
+
+  final TournamentSide entry;
+  final int played;
+  final int won;
+  final int gamesFor;
+  final int gamesAgainst;
+  final int pointDifference;
+}
+
+class TournamentMatch {
+  TournamentMatch.fromJson(Map<String, dynamic> json)
+    : id = json['id'] as int,
+      stage = json['stage'] as String? ?? 'knockout',
+      group = (json['group'] as num?)?.toInt(),
+      round = (json['round'] as num?)?.toInt() ?? 1,
+      roundName = json['round_name'] as String? ?? '',
+      position = (json['position'] as num?)?.toInt() ?? 1,
+      a = json['a'] == null ? null : TournamentSide.fromJson(json['a'] as Map<String, dynamic>),
+      b = json['b'] == null ? null : TournamentSide.fromJson(json['b'] as Map<String, dynamic>),
+      winnerId = (json['winner_id'] as num?)?.toInt(),
+      scores = [
+        for (final game in json['scores'] as List? ?? const [])
+          [for (final points in game as List) (points as num).toInt()],
+      ],
+      walkover = json['walkover'] == true,
+      bye = json['bye'] == true,
+      court = json['court'] as String?;
+
+  final int id;
+
+  /// group or knockout.
+  final String stage;
+  final int? group;
+  final int round;
+  final String roundName;
+  final int position;
+  final TournamentSide? a;
+  final TournamentSide? b;
+  final int? winnerId;
+
+  /// Points per game, side a first.
+  final List<List<int>> scores;
+  final bool walkover;
+  final bool bye;
+
+  /// Set once staff call the match to a court.
+  final String? court;
+
+  bool get finished => winnerId != null;
+}

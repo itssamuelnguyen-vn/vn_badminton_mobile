@@ -89,6 +89,78 @@ void main() {
     expect(payment.bookings.single.code, 'K7MPX2QA');
   });
 
+  test('a tournament with its entry, group table and matches', () {
+    final tournament = Tournament.fromJson({
+      'id': 4,
+      'title': 'Giải tháng 11',
+      'event': 'Đơn nữ',
+      'discipline': 'singles',
+      'gender': 'female',
+      'play_format': 'groups_knockout',
+      'courts': ['Sân 1', 'Sân 2'],
+      'starts_at': '2026-11-01T08:00:00+07:00',
+      'ends_at': '2026-11-01T12:00:00+07:00',
+      'registration_closes_at': '2026-10-31T20:00:00+07:00',
+      'max_entries': 8,
+      'spots_left': 0,
+      'fee_vnd': 100000,
+      'status': 'in_progress',
+      'registration_open': false,
+      'my_entry': {'id': 3, 'name': 'Lê Chi', 'status': 'confirmed', 'amount_vnd': 100000, 'can_cancel': false},
+      'groups': [
+        {
+          'number': 2,
+          'rows': [
+            {
+              'entry': {'id': 3, 'name': 'Lê Chi'},
+              'played': 2,
+              'won': 1,
+              'games_for': 3,
+              'games_against': 2,
+              'point_difference': -4,
+            },
+          ],
+        },
+      ],
+      'matches': [
+        {
+          'id': 9,
+          'stage': 'group',
+          'group': 2,
+          'round': 1,
+          'round_name': 'Vòng 1',
+          'position': 1,
+          'a': {'id': 3, 'name': 'Lê Chi'},
+          'b': null,
+          'winner_id': null,
+          'scores': [
+            [21, 19],
+          ],
+          'court': 'Sân 2',
+        },
+      ],
+    });
+
+    expect(tournament.byGender, isTrue);
+    expect(tournament.doubles, isFalse);
+    expect(tournament.myEntry?.status, 'confirmed');
+    expect(tournament.groups.single.letter, 'B');
+    expect(tournament.groups.single.rows.single.pointDifference, -4);
+    final match = tournament.matches.single;
+    expect(
+      [match.a?.name, match.b, match.finished, match.scores, match.court],
+      [
+        'Lê Chi',
+        null,
+        false,
+        [
+          [21, 19],
+        ],
+        'Sân 2',
+      ],
+    );
+  });
+
   test('the venue with its policy, courts and products; defaults when missing', () {
     final venue = Venue.fromJson({
       'name': 'VN Badminton',

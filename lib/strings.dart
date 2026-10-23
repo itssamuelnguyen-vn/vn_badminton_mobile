@@ -154,6 +154,7 @@ class S {
   );
   String get paymentCancelled => _('Đơn này đã bị huỷ.', 'This order was cancelled.');
   String get cancelPlaces => _('Huỷ giữ chỗ', 'Cancel places');
+  String get cancelEntry => _('Huỷ đăng ký giải', 'Cancel my entry');
   String get cancelPaymentHint => _(
     'Không đặt nữa? Huỷ để trả lại chỗ ngay, khỏi chờ hết giờ.',
     'Changed your mind? Cancel to release the slot now.',
@@ -475,6 +476,68 @@ class S {
     'Give these places back? Paid places are not refunded.',
   );
   String levelLabel(String? level) => level == null ? _('Mọi trình độ', 'All levels') : skillLabel(level);
+
+  // Tournaments (GD-01..09)
+  String get tabTournaments => _('Giải đấu', 'Tournaments');
+  String get tournamentsIntro => _(
+    'Giải đấu nội bộ của sân: đăng ký, đóng lệ phí và theo dõi sơ đồ thi đấu ngay trong app.',
+    "The venue's in-house tournaments: enter, pay the fee and follow the draw in the app.",
+  );
+  String get noTournaments =>
+      _('Hiện chưa có giải đấu nào. Quay lại sau nhé!', 'No tournament at the moment. Check back soon!');
+  String formatLabel(String format) => switch (format) {
+    'groups_knockout' => _('Vòng bảng + loại trực tiếp', 'Groups + knockout'),
+    'round_robin' => _('Vòng tròn', 'Round robin'),
+    _ => _('Loại trực tiếp', 'Knockout'),
+  };
+  String spotsLeft(int left, int max) => _('Còn $left/$max suất', '$left/$max places left');
+  String get registrationClosed => _('Đã hết hạn đăng ký', 'Registration closed');
+  String get inProgress => _('Đang thi đấu', 'In progress');
+  String get finishedLabel => _('Đã kết thúc', 'Finished');
+  String get cancelledLabel => _('Đã huỷ', 'Cancelled');
+  String championIs(String name) => _('Vô địch: $name', 'Champion: $name');
+  String get champion => _('Vô địch', 'Champion');
+  String fee(String amount, bool pair) =>
+      pair ? _('Lệ phí $amount/cặp', 'Fee $amount/pair') : _('Lệ phí $amount', 'Fee $amount');
+  String get free => _('Miễn phí', 'Free');
+  String registrationCloses(String time) => _('Hạn đăng ký: $time', 'Registration closes $time');
+  String get enterTournament => _('Đăng ký thi đấu', 'Enter');
+  String get partner => _('Đồng đội', 'Partner');
+  String get partnerName => _('Họ tên đồng đội', "Partner's name");
+  String get partnerPhone => _('Số điện thoại đồng đội', "Partner's phone number");
+  String get partnerGender => _('Giới tính đồng đội', "Partner's gender");
+  String get partnerHint => _(
+    'Nếu đồng đội có tài khoản với số này, suất được gắn vào tài khoản của họ.',
+    'If your partner has an account with this number, the entry is linked to it.',
+  );
+  String get namesPublic =>
+      _('Tên người chơi hiện công khai trên trang giải.', "Players' names are shown publicly on the tournament page.");
+  String get genderNeeded => _(
+    'Nội dung này chia theo giới tính: chọn giới tính trong Tài khoản → Hồ sơ trước khi đăng ký.',
+    'This event is by gender: set your gender in Account → Profile before entering.',
+  );
+  String entryPending(String name) =>
+      _('Bạn đã đăng ký ($name), chờ chuyển khoản lệ phí.', 'You entered ($name); the fee transfer is pending.');
+  String entryConfirmed(String name) => _('Bạn đã có suất: $name', 'You have a place: $name');
+  String get entered => _('Bạn đã đăng ký', 'You entered');
+  String get enteredFree => _('Đăng ký thành công, bạn đã có suất thi đấu!', "You're in, your place is confirmed!");
+  String get withdrawEntry => _('Rút khỏi giải', 'Withdraw');
+  String withdrawConfirm(bool paid) => paid
+      ? _(
+          'Rút khỏi giải này? Lệ phí đã đóng sẽ không được hoàn lại.',
+          'Withdraw from this tournament? The fee paid is not refunded.',
+        )
+      : _('Rút khỏi giải này?', 'Withdraw from this tournament?');
+  String entriesTitle(int count) => _('Danh sách thi đấu ($count)', 'Entries ($count)');
+  String get noEntries => _('Chưa có ai đăng ký.', 'Nobody has entered yet.');
+  String get groupStage => _('Vòng bảng', 'Groups');
+  String groupLetter(String letter) => _('Bảng $letter', 'Group $letter');
+  String get standingsTitle => _('Bảng xếp hạng', 'Standings');
+  String get standingsHeader => _('Tr · T · Ván · HS', 'P · W · Games · +/-');
+  String get bracket => _('Sơ đồ loại trực tiếp', 'Knockout bracket');
+  String get byeLabel => _('Miễn đấu', 'Bye');
+  String get walkoverLabel => _('Thắng do đối thủ bỏ cuộc', 'Won by walkover');
+  String onCourt(String court) => _('Đang đấu ở $court', 'Playing on $court');
 
   // Groups (NH-01..03)
   String get groups => _('Nhóm chơi', 'Groups');

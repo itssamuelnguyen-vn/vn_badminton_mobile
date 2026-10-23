@@ -20,6 +20,12 @@ void main() {
     expect(parse('https://court.example.vn/en/bookings'), const DeepLink(LinkTarget.bookings));
   });
 
+  test("a tournament's page (push notifications of the tournament)", () {
+    expect(parse('https://court.example.vn/tournaments/12'), const DeepLink(LinkTarget.tournament, '12'));
+    expect(parse('https://court.example.vn/tournaments'), const DeepLink(LinkTarget.home));
+    expect(parse('https://court.example.vn/tournaments/x'), const DeepLink(LinkTarget.home));
+  });
+
   test('other pages of the server open the home screen', () {
     for (final url in [
       'https://court.example.vn/',

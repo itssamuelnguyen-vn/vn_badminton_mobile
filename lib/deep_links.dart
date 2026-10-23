@@ -7,14 +7,14 @@ import 'api.dart';
 
 /// Where a link of the server's emails or a push notification leads in the app (Android App Links, see
 /// docs/app-links.md; push.dart).
-enum LinkTarget { payment, booking, bookings, home }
+enum LinkTarget { payment, booking, bookings, tournament, home }
 
 class DeepLink {
   const DeepLink(this.target, [this.value]);
 
   final LinkTarget target;
 
-  /// The payment token or the booking code.
+  /// The payment token, the booking code or the tournament's id.
   final String? value;
 
   @override
@@ -27,7 +27,8 @@ class DeepLink {
   String toString() => 'DeepLink($target, $value)';
 }
 
-/// The web page a link opens, as a screen of the app: `/payments/<token>`, `/bookings/<code>` and `/bookings`,
+/// The web page a link opens, as a screen of the app: `/payments/<token>`, `/bookings/<code>`, `/bookings` and
+/// `/tournaments/<id>`,
 /// with or without the /en prefix of the English pages. Any other page of the server opens the home screen; links
 /// to another host are ignored (null).
 DeepLink? parseDeepLink(Uri uri, {String? host}) {
@@ -43,6 +44,9 @@ DeepLink? parseDeepLink(Uri uri, {String? host}) {
     return DeepLink(LinkTarget.booking, segments[1]);
   }
   if (segments.length == 1 && segments[0] == 'bookings') return const DeepLink(LinkTarget.bookings);
+  if (segments.length == 2 && segments[0] == 'tournaments' && RegExp(r'^\d+$').hasMatch(segments[1])) {
+    return DeepLink(LinkTarget.tournament, segments[1]);
+  }
   return const DeepLink(LinkTarget.home);
 }
 
