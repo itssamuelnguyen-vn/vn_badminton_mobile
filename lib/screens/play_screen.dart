@@ -11,7 +11,7 @@ import 'payment_screen.dart';
 import 'tournaments_screen.dart';
 
 /// The "Giao lưu" tab: open play (GL-01..03: coming sessions, places left, the customer's places; joining one
-/// opens the transfer page) and, with the switch in the header, the tournaments (TournamentList).
+/// opens the transfer page) and, with the switch in the header, the customer's own tournaments (TournamentList).
 class PlayScreen extends StatefulWidget {
   const PlayScreen({super.key});
 

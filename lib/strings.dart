@@ -154,7 +154,6 @@ class S {
   );
   String get paymentCancelled => _('Đơn này đã bị huỷ.', 'This order was cancelled.');
   String get cancelPlaces => _('Huỷ giữ chỗ', 'Cancel places');
-  String get cancelEntry => _('Huỷ đăng ký giải', 'Cancel my entry');
   String get cancelPaymentHint => _(
     'Không đặt nữa? Huỷ để trả lại chỗ ngay, khỏi chờ hết giờ.',
     'Changed your mind? Cancel to release the slot now.',
@@ -477,59 +476,156 @@ class S {
   );
   String levelLabel(String? level) => level == null ? _('Mọi trình độ', 'All levels') : skillLabel(level);
 
-  // Tournaments (GD-01..09)
+  // Tournaments (GD-01..07): the customers' own, the venue takes no part
   String get tabTournaments => _('Giải đấu', 'Tournaments');
+  String get myTournaments => _('Giải đấu của tôi', 'My tournaments');
   String get tournamentsIntro => _(
-    'Giải đấu nội bộ của sân: đăng ký, đóng lệ phí và theo dõi sơ đồ thi đấu ngay trong app.',
-    "The venue's in-house tournaments: enter, pay the fee and follow the draw in the app.",
+    'Tự tổ chức giải cho nhóm của bạn: nhập tên, bốc thăm, nhập tỉ số.',
+    'Run a tournament for your group: names, draw, scores.',
   );
-  String get noTournaments =>
-      _('Hiện chưa có giải đấu nào. Quay lại sau nhé!', 'No tournament at the moment. Check back soon!');
+  String get tournamentsExplain => _(
+    'Đặt sân như bình thường, tạo giải, nhập tên người chơi, bốc thăm, rồi nhập tỉ số ngay trên điện thoại. Gửi link để mọi người theo dõi sơ đồ và kết quả.',
+    "Book courts as usual, create a tournament, type the players' names, make the draw, then enter scores right on your phone. Send the link so everyone can follow the draw and results.",
+  );
+  String get signInToSeeTournaments =>
+      _('Đăng nhập để tạo và quản lý giải đấu của bạn.', 'Sign in to create and run your tournaments.');
+  String get noTournaments => _(
+    'Bạn chưa có giải nào. Tạo một giải rồi gửi link cho cả nhóm nhé.',
+    'You have no tournament yet. Create one and send the link to your group.',
+  );
+  String get newTournament => _('Tạo giải mới', 'New tournament');
+  String get editTournament => _('Sửa giải đấu', 'Edit tournament');
+  String get createTournament => _('Tạo giải', 'Create tournament');
+  String get newTournamentExplain => _(
+    'Giải đấu là công cụ cho nhóm của bạn, sân không tham gia tổ chức. Sau khi tạo, bạn nhập tên người chơi (không cần tài khoản), bốc thăm và nhập tỉ số.',
+    "Tournaments are a tool for your group; the venue does not run them. Once created, type the players' names (no account needed), make the draw and enter the scores.",
+  );
+  String organizerOf(String name) => _('Bạn giúp $name nhập tỉ số', 'You help $name enter scores');
+  String organizedBy(String name) => _('Tổ chức bởi $name', 'Organized by $name');
+  String eventLabel(String discipline) => switch (discipline) {
+    'doubles' => _('Đôi', 'Doubles'),
+    'mixed_doubles' => _('Đôi nam nữ', 'Mixed doubles'),
+    _ => _('Đơn', 'Singles'),
+  };
   String formatLabel(String format) => switch (format) {
     'groups_knockout' => _('Vòng bảng + loại trực tiếp', 'Groups + knockout'),
     'round_robin' => _('Vòng tròn', 'Round robin'),
     _ => _('Loại trực tiếp', 'Knockout'),
   };
-  String spotsLeft(int left, int max) => _('Còn $left/$max suất', '$left/$max places left');
-  String get registrationClosed => _('Đã hết hạn đăng ký', 'Registration closed');
-  String get inProgress => _('Đang thi đấu', 'In progress');
-  String get finishedLabel => _('Đã kết thúc', 'Finished');
-  String get cancelledLabel => _('Đã huỷ', 'Cancelled');
-  String championIs(String name) => _('Vô địch: $name', 'Champion: $name');
+  String formatHint(String format) => switch (format) {
+    'groups_knockout' => _(
+      'Chia bảng đấu vòng tròn, người đứng đầu mỗi bảng vào vòng loại trực tiếp.',
+      'Round robin groups, the top of each group go on to a knockout.',
+    ),
+    'round_robin' => _(
+      'Ai cũng gặp ai, xếp hạng theo số trận thắng. Tối đa 10 người/cặp.',
+      'Everyone meets everyone, ranked by matches won. At most 10 players or pairs.',
+    ),
+    _ => _(
+      'Thua là bị loại. Hạt giống được xếp xa nhau và miễn đấu vòng đầu khi thiếu người.',
+      'Lose and you are out. Seeds are placed apart and get the byes.',
+    ),
+  };
+  String tournamentStatus(String status) => switch (status) {
+    'in_progress' => _('Đang thi đấu', 'In progress'),
+    'finished' => _('Đã kết thúc', 'Finished'),
+    _ => _('Đang chuẩn bị', 'Getting ready'),
+  };
+  String get tournamentName => _('Tên giải', 'Name');
+  String get tournamentNameHint => _('Ví dụ: Giải cầu lông công ty tháng 11', 'E.g. Office badminton cup, November');
+  String get tournamentDescription => _('Mô tả', 'Description');
+  String get tournamentDescriptionHint => _('Giải thưởng, luật thi đấu, số ván…', 'Prizes, rules, number of games…');
+  String get eventTitle => _('Nội dung', 'Event');
+  String get disciplineLocked =>
+      _('Đã có người chơi nên không đổi nội dung được.', 'Players are already typed, so the event cannot change.');
+  String get formatTitle => _('Thể thức', 'Format');
+  String get formatLocked =>
+      _('Đã bốc thăm nên không đổi thể thức được.', 'The draw is made, so the format cannot change.');
+  String get groupSize => _('Số người/cặp mỗi bảng', 'Players or pairs per group');
+  String get advancePerGroup => _('Số người vào vòng trong mỗi bảng', 'Going on from each group');
+  String get playedOn => _('Ngày thi đấu', 'Date');
+  String get playedOnHint => _(
+    'Không bắt buộc. Khi bạn gắn lượt đặt sân vào giải, ngày lấy theo lượt đặt.',
+    'Optional. Once you link court bookings to the tournament, the date comes from them.',
+  );
+  String get pickDate => _('Chọn ngày', 'Pick a date');
+  String get shareTournament => _('Gửi link giải', 'Send the link');
+  String get edit => _('Sửa', 'Edit');
+  String get deleteTournament => _('Xoá giải', 'Delete tournament');
+  String get deleteTournamentConfirm => _(
+    'Xoá giải này cùng toàn bộ người chơi và kết quả? Không khôi phục được.',
+    'Delete this tournament with all its players and results? This cannot be undone.',
+  );
+  String get tournamentDeleted => _('Đã xoá giải.', 'Tournament deleted.');
   String get champion => _('Vô địch', 'Champion');
-  String fee(String amount, bool pair) =>
-      pair ? _('Lệ phí $amount/cặp', 'Fee $amount/pair') : _('Lệ phí $amount', 'Fee $amount');
-  String get free => _('Miễn phí', 'Free');
-  String registrationCloses(String time) => _('Hạn đăng ký: $time', 'Registration closes $time');
-  String get enterTournament => _('Đăng ký thi đấu', 'Enter');
-  String get partner => _('Đồng đội', 'Partner');
-  String get partnerName => _('Họ tên đồng đội', "Partner's name");
-  String get partnerPhone => _('Số điện thoại đồng đội', "Partner's phone number");
-  String get partnerGender => _('Giới tính đồng đội', "Partner's gender");
-  String get partnerHint => _(
-    'Nếu đồng đội có tài khoản với số này, suất được gắn vào tài khoản của họ.',
-    'If your partner has an account with this number, the entry is linked to it.',
+  String get tournamentCourts => _('Sân thi đấu', 'Courts');
+  String get linkBookingsHint => _(
+    'Chọn các lượt đặt sân của bạn dùng cho giải. Mọi người sẽ thấy giờ và sân, và bạn chọn được sân cho từng trận.',
+    'Pick your court bookings used for the tournament. Everyone sees the times and courts, and you can set each match\'s court.',
   );
-  String get namesPublic =>
-      _('Tên người chơi hiện công khai trên trang giải.', "Players' names are shown publicly on the tournament page.");
-  String get genderNeeded => _(
-    'Nội dung này chia theo giới tính: chọn giới tính trong Tài khoản → Hồ sơ trước khi đăng ký.',
-    'This event is by gender: set your gender in Account → Profile before entering.',
+  String get linkBookings => _('Chọn lượt đặt sân', 'Pick court bookings');
+  String get saveCourts => _('Lưu sân', 'Save courts');
+  String get noLinkableBookings => _(
+    'Bạn chưa có lượt đặt sân nào sắp tới. Đặt sân rồi quay lại gắn vào giải (không bắt buộc).',
+    'You have no upcoming booking. Book a court, then come back to link it (optional).',
   );
-  String entryPending(String name) =>
-      _('Bạn đã đăng ký ($name), chờ chuyển khoản lệ phí.', 'You entered ($name); the fee transfer is pending.');
-  String entryConfirmed(String name) => _('Bạn đã có suất: $name', 'You have a place: $name');
-  String get entered => _('Bạn đã đăng ký', 'You entered');
-  String get enteredFree => _('Đăng ký thành công, bạn đã có suất thi đấu!', "You're in, your place is confirmed!");
-  String get withdrawEntry => _('Rút khỏi giải', 'Withdraw');
-  String withdrawConfirm(bool paid) => paid
+  String playersTitle(int count) => _('Người chơi ($count)', 'Players ($count)');
+  String get noPlayers => _('Chưa có người chơi nào.', 'No player yet.');
+  String get playersHint => _(
+    'Thêm tên rồi bốc thăm. Đặt hạt giống (1, 2, …) cho người mạnh nhất để họ không gặp nhau sớm; không bắt buộc.',
+    'Add the names, then make the draw. Seed the strongest (1, 2, …) so they do not meet early; optional.',
+  );
+  String get addPlayers => _('Thêm người chơi', 'Add players');
+  String addPlayersHint(bool doubles) => doubles
       ? _(
-          'Rút khỏi giải này? Lệ phí đã đóng sẽ không được hoàn lại.',
-          'Withdraw from this tournament? The fee paid is not refunded.',
+          'Mỗi dòng một cặp, hai tên cách nhau bởi dấu / (ví dụ: Hùng / Lan). Người chơi không cần tài khoản.',
+          'One pair per line, the two names split by / (e.g. Hung / Lan). Players need no account.',
         )
-      : _('Rút khỏi giải này?', 'Withdraw from this tournament?');
-  String entriesTitle(int count) => _('Danh sách thi đấu ($count)', 'Entries ($count)');
-  String get noEntries => _('Chưa có ai đăng ký.', 'Nobody has entered yet.');
+      : _('Mỗi dòng một người. Người chơi không cần tài khoản.', 'One player per line. Players need no account.');
+  String addPlayersPlaceholder(bool doubles) =>
+      doubles ? _('Hùng / Lan\nMinh / Thảo', 'Hung / Lan\nMinh / Thao') : _('Hùng\nLan\nMinh', 'Hung\nLan\nMinh');
+  String get addToList => _('Thêm vào danh sách', 'Add to the list');
+  String get playerName => _('Tên', 'Name');
+  String get partnerName => _('Tên đồng đội', "Partner's name");
+  String get seed => _('Hạt giống', 'Seed');
+  String seeded(int number) => _('Hạt giống $number', 'Seed $number');
+  String get removePlayer => _('Xoá', 'Remove');
+  String removePlayerConfirm(String name) => _('Xoá $name khỏi danh sách?', 'Remove $name from the list?');
+  String get makeDraw => _('Bốc thăm', 'Make the draw');
+  String get drawConfirm => _(
+    'Bốc thăm ngay? Sau đó không thêm hay bớt người chơi được (trừ khi bốc thăm lại trước trận đầu tiên).',
+    'Make the draw now? Players can then no longer be added or removed (unless you draw again before the first match).',
+  );
+  String get drawHint => _(
+    'Hạt giống được xếp trước, những người còn lại được xếp ngẫu nhiên.',
+    'Seeds are placed first, the others at random.',
+  );
+  String get drawAgain => _('Bốc thăm lại', 'Draw again');
+  String get drawAgainConfirm => _(
+    'Huỷ kết quả bốc thăm hiện tại? Lịch thi đấu sẽ được xoá, danh sách người chơi giữ nguyên.',
+    'Undo the current draw? The matches are removed, the players stay.',
+  );
+  String get scoreKeepers => _('Người nhập tỉ số', 'Score keepers');
+  String get scoreKeepersHint => _(
+    'Gửi link này cho bạn bè có tài khoản để họ cùng nhập tỉ số (ví dụ mỗi người một sân). Chỉ bạn sửa được danh sách người chơi và bốc thăm.',
+    'Send this link to friends with an account so they can enter scores too (e.g. one per court). Only you can change the players and make the draw.',
+  );
+  String get sendScoreKeeperLink => _('Gửi link nhập tỉ số', 'Send the score keeper link');
+  String get newLink => _('Tạo link mới', 'New link');
+  String get newLinkConfirm => _(
+    'Link cũ sẽ không dùng được nữa (người đã nhận quyền vẫn giữ quyền). Tạo link mới?',
+    'The old link will stop working (people who joined keep their access). Make a new link?',
+  );
+  String get newLinkDone =>
+      _('Đã tạo link mới. Link cũ không dùng được nữa.', 'New link made. The old one no longer works.');
+  String get noScoreKeepers => _('Chưa có ai. Chỉ bạn nhập được tỉ số.', 'Nobody yet. Only you can enter scores.');
+  String get removeScoreKeeper => _('Bỏ quyền', 'Remove');
+  String removeScoreKeeperConfirm(String name) =>
+      _('Bỏ quyền nhập tỉ số của $name?', 'Stop $name from entering scores?');
+  String get resultsHint => _(
+    'Bấm vào một trận để chọn sân và nhập tỉ số từng ván. Người thắng tự vào trận sau.',
+    'Tap a match to set its court and enter each game\'s score. Winners move on by themselves.',
+  );
   String get groupStage => _('Vòng bảng', 'Groups');
   String groupLetter(String letter) => _('Bảng $letter', 'Group $letter');
   String get standingsTitle => _('Bảng xếp hạng', 'Standings');
@@ -538,6 +634,24 @@ class S {
   String get byeLabel => _('Miễn đấu', 'Bye');
   String get walkoverLabel => _('Thắng do đối thủ bỏ cuộc', 'Won by walkover');
   String onCourt(String court) => _('Đang đấu ở $court', 'Playing on $court');
+  String get courtLabel => _('Sân', 'Court');
+  String get noCourt => _('Chưa chọn sân', 'No court');
+  String get enterResult => _('Nhập kết quả', 'Enter result');
+  String get correctResult => _('Sửa kết quả', 'Correct result');
+  String gameNumber(int number) => _('Ván $number', 'Game $number');
+  String get saveResult => _('Lưu kết quả', 'Save result');
+  String get orWalkover => _('hoặc xử thắng', 'or give a walkover');
+  String walkoverFor(String name) => _('$name thắng', '$name wins');
+  String walkoverConfirm(String name) => _('Xử $name thắng do đối thủ bỏ cuộc?', 'Give $name the win by walkover?');
+  String get scoresNeeded => _('Nhập tỉ số ít nhất một ván.', 'Enter the score of at least one game.');
+  String get acceptScoreKeeper => _('Nhận quyền nhập tỉ số', 'Accept');
+  String scoreKeeperInvite(String name) =>
+      _('$name mời bạn cùng nhập tỉ số cho giải này.', '$name invites you to enter scores for this tournament.');
+  String get alreadyScoreKeeper =>
+      _('Bạn đã có quyền nhập tỉ số cho giải này.', 'You can already enter scores for this tournament.');
+  String get openTournament => _('Mở trang giải', 'Open the tournament');
+  String get joinedScoreKeeper =>
+      _('Bạn đã có quyền nhập tỉ số cho giải này.', 'You can now enter scores for this tournament.');
 
   // Groups (NH-01..03)
   String get groups => _('Nhóm chơi', 'Groups');

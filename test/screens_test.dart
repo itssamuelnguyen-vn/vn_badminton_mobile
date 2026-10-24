@@ -100,91 +100,204 @@ void main() {
     expect(find.text('Huỷ đặt sân'), findsNothing);
   });
 
-  testWidgets("a tournament's page: the bracket with the winner, and entering a doubles event with a partner", (
-    tester,
-  ) async {
-    Map<String, Object?> tournament({Map<String, Object?>? mine, List<Object> matches = const []}) => {
-      'id': 7,
-      'title': 'Giải đôi tháng 11',
-      'event': 'Đôi nam nữ',
-      'discipline': 'mixed_doubles',
+  group('tournaments (GD-01..07)', () {
+    const token = 'Ab12Cd34Ef56Gh78';
+    User an() => User.fromJson({'id': 1, 'full_name': 'Nguyễn An', 'email': 'an@example.com'});
+    Map<String, Object?> side(int id, String name) => {'id': id, 'name': name};
+    Map<String, Object?> tournament({
+      String status = 'setup',
+      bool creator = true,
+      List<String> players = const ['An'],
+      List<Object> matches = const [],
+      String? champion,
+    }) => {
+      'token': token,
+      'title': 'Giải cuối tuần',
+      'description': 'Giải nhất: 1 hộp cầu',
+      'event': 'Đơn',
+      'discipline': 'singles',
       'play_format': 'knockout',
-      'courts': ['Sân 1'],
-      'starts_at': '2026-11-01T08:00:00+07:00',
-      'ends_at': '2026-11-01T12:00:00+07:00',
-      'registration_closes_at': '2026-10-31T20:00:00+07:00',
-      'max_entries': 8,
-      'spots_left': 6,
-      'fee_vnd': 0,
-      'status': matches.isEmpty ? 'open' : 'finished',
-      'registration_open': matches.isEmpty,
-      'my_entry': mine,
-      'champion': matches.isEmpty ? null : 'An / Chi',
+      'date': '2026-11-01',
+      'status': status,
+      'created_by': 'Nguyễn An',
+      'creator': creator,
+      'organizer': creator,
+      'share_path': '/tournaments/$token',
+      'champion': champion,
+      'redrawable': false,
       'entries': [
-        {'id': 1, 'name': 'An / Chi'},
-        {'id': 2, 'name': 'Bình / Dung'},
+        for (final (index, name) in players.indexed)
+          {'id': index + 1, 'name': name, 'partner_name': null, 'seed': null},
       ],
+      'bookings': <Object>[],
+      'courts': <Object>[],
+      'linkable_bookings': <Object>[],
+      'organizer_path': creator ? '/tournaments/$token/organize/Zz98Yy76Xx54Ww32' : null,
+      'organizers': <Object>[],
       'groups': <Object>[],
       'matches': matches,
     };
-    final server = FakeServer({
-      'GET /tournaments/7': (200, tournament()),
-      'POST /tournaments/7/entries': (
-        201,
-        tournament(
-          mine: {'id': 3, 'name': 'Nguyễn An / Lê Chi', 'status': 'confirmed', 'amount_vnd': 0, 'can_cancel': true},
-        ),
-      ),
-    });
-    tester.view.physicalSize = const Size(1080, 4800);
-    addTearDown(tester.view.reset);
-    final state = await pumpScreen(tester, const TournamentScreen(id: 7), server: server);
-    state.user = User.fromJson({'id': 1, 'full_name': 'Nguyễn An', 'email': 'an@example.com', 'gender': 'male'});
-    await tester.pumpAndSettle();
-    expect(find.text('Danh sách thi đấu (2)'), findsOneWidget);
+    Map<String, Object?> finalMatch({List<Object> scores = const [], int? winner}) => {
+      'id': 9,
+      'stage': 'knockout',
+      'round': 1,
+      'round_name': 'Chung kết',
+      'position': 1,
+      'a': side(1, 'An'),
+      'b': side(2, 'Bình'),
+      'winner_id': winner,
+      'scores': scores,
+      'walkover': false,
+      'bye': false,
+      'court': null,
+      'court_id': null,
+      'editable': true,
+      'ready': winner == null,
+    };
 
-    await tester.tap(find.text('Đăng ký thi đấu'));
-    await tester.pumpAndSettle();
-    await tester.enterText(find.widgetWithText(TextFormField, 'Họ tên đồng đội'), 'Lê Chi');
-    await tester.enterText(find.widgetWithText(TextFormField, 'Số điện thoại đồng đội'), '0933 000 111');
-    await tester.tap(find.byType(DropdownButtonFormField<String>));
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Nữ').last);
-    await tester.pumpAndSettle();
-    await tester.tap(find.text('Đăng ký thi đấu').last);
-    await tester.pumpAndSettle();
-    final sent = jsonDecode(server.requests.last.body) as Map<String, dynamic>;
-    expect(sent['partner'], {'name': 'Lê Chi', 'phone': '0933 000 111', 'gender': 'female'});
-    expect(find.text('Bạn đã có suất: Nguyễn An / Lê Chi'), findsOneWidget);
+    testWidgets('signed out, the list asks to sign in; signed in, it lists the ones they run', (tester) async {
+      await pumpScreen(tester, const Scaffold(body: TournamentList()));
+      await tester.pumpAndSettle();
+      expect(find.text('Đăng nhập để tạo và quản lý giải đấu của bạn.'), findsOneWidget);
 
-    server.routes['GET /tournaments/7'] = (
-      200,
-      tournament(
-        matches: [
+      final server = FakeServer({
+        'GET /tournaments': (
+          200,
           {
-            'id': 9,
-            'stage': 'knockout',
-            'round': 1,
-            'round_name': 'Chung kết',
-            'position': 1,
-            'a': {'id': 1, 'name': 'An / Chi'},
-            'b': {'id': 2, 'name': 'Bình / Dung'},
-            'winner_id': 1,
-            'scores': [
-              [21, 15],
-              [21, 18],
-            ],
-            'walkover': false,
-            'bye': false,
+            'tournaments': [tournament(creator: false)],
           },
+        ),
+      });
+      final state = fakeState(server: server)..user = an();
+      await pumpScreen(
+        tester,
+        const Scaffold(body: TournamentList(key: ValueKey('in'))),
+        state: state,
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Tạo giải mới'), findsOneWidget);
+      expect(find.text('Giải cuối tuần'), findsOneWidget);
+      expect(find.text('Bạn giúp Nguyễn An nhập tỉ số'), findsOneWidget);
+    });
+
+    testWidgets('the creator adds players (errors shown), makes the draw and enters the result', (tester) async {
+      final server = FakeServer({
+        'GET /tournaments/$token': (200, tournament()),
+        'POST /tournaments/$token/entries': (
+          422,
+          {
+            'error': 'invalid',
+            'messages': ['Dòng 2: Tên quá dài'],
+          },
+        ),
+      });
+      tester.view.physicalSize = const Size(1080, 4800);
+      addTearDown(tester.view.reset);
+      final state = fakeState(server: server)..user = an();
+      await pumpScreen(tester, const TournamentScreen(token: token), state: state);
+      await tester.pumpAndSettle();
+      expect(find.text('Người chơi (1)'), findsOneWidget);
+      expect(find.text('Giải nhất: 1 hộp cầu'), findsOneWidget);
+
+      await tester.enterText(find.byType(TextField), 'Bình\nChi');
+      await tester.tap(find.text('Thêm vào danh sách'));
+      await tester.pumpAndSettle();
+      expect(find.text('Dòng 2: Tên quá dài'), findsOneWidget);
+      expect(jsonDecode(server.requests.last.body), {'list': 'Bình\nChi'});
+
+      server.routes['POST /tournaments/$token/entries'] = (201, tournament(players: ['An', 'Bình', 'Chi']));
+      await tester.tap(find.text('Thêm vào danh sách'));
+      await tester.pumpAndSettle();
+      expect(find.text('Người chơi (3)'), findsOneWidget);
+
+      server.routes['POST /tournaments/$token/draw'] = (
+        200,
+        tournament(status: 'in_progress', players: ['An', 'Bình'], matches: [finalMatch()]),
+      );
+      await tester.tap(find.text('Bốc thăm'));
+      await tester.pumpAndSettle();
+      await tester.tap(find.text('Bốc thăm').last);
+      await tester.pumpAndSettle();
+      expect(server.requests.last.method, 'POST');
+      expect(server.requests.last.url.path, '/api/v1/tournaments/$token/draw');
+      expect(find.text('Sơ đồ loại trực tiếp'), findsOneWidget);
+      expect(find.text('Thêm vào danh sách'), findsNothing);
+
+      server.routes['PATCH /tournaments/$token/matches/9'] = (
+        200,
+        tournament(
+          status: 'finished',
+          champion: 'An',
+          matches: [
+            finalMatch(
+              winner: 1,
+              scores: [
+                [21, 15],
+                [21, 18],
+              ],
+            ),
+          ],
+        ),
+      );
+      await tester.tap(find.text('Bình'));
+      await tester.pumpAndSettle();
+      expect(find.text('Nhập kết quả'), findsOneWidget);
+      final fields = find.byType(TextField);
+      for (final (index, points) in ['21', '15', '21', '18'].indexed) {
+        await tester.enterText(fields.at(index), points);
+      }
+      await tester.tap(find.text('Lưu kết quả'));
+      await tester.pumpAndSettle();
+      expect(jsonDecode(server.requests.last.body), {
+        'scores': [
+          [21, 15],
+          [21, 18],
         ],
-      ),
-    );
-    await pumpScreen(tester, const TournamentScreen(key: ValueKey('again'), id: 7), server: server);
-    await tester.pumpAndSettle();
-    expect(find.text('Sơ đồ loại trực tiếp'), findsOneWidget);
-    expect(find.text('CHUNG KẾT'), findsOneWidget);
-    expect(find.text('21 21'), findsOneWidget);
-    expect(find.text('Vô địch'), findsOneWidget);
+      });
+      expect(find.text('Vô địch'), findsOneWidget);
+      expect(find.text('21 21'), findsOneWidget);
+    });
+
+    testWidgets('anyone with the link sees the page, without the tools', (tester) async {
+      final server = FakeServer({
+        'GET /tournaments/$token': (
+          200,
+          tournament(status: 'in_progress', creator: false, players: ['An', 'Bình'], matches: [finalMatch()]),
+        ),
+      });
+      tester.view.physicalSize = const Size(1080, 4800);
+      addTearDown(tester.view.reset);
+      await pumpScreen(tester, const TournamentScreen(token: token), server: server);
+      await tester.pumpAndSettle();
+      expect(find.text('Tổ chức bởi Nguyễn An'), findsOneWidget);
+      expect(find.byIcon(Icons.share_rounded), findsOneWidget);
+      expect(find.text('CHUNG KẾT'), findsOneWidget);
+      for (final tool in ['Thêm người chơi', 'Người nhập tỉ số', 'Sân thi đấu']) {
+        expect(find.text(tool), findsNothing, reason: tool);
+      }
+      await tester.tap(find.text('Bình'));
+      await tester.pumpAndSettle();
+      expect(find.text('Nhập kết quả'), findsNothing);
+    });
+
+    testWidgets('the organizer link: accepting opens the page with the organizer tools', (tester) async {
+      final server = FakeServer({
+        'GET /tournaments/$token': (200, tournament(creator: false)),
+        'POST /tournaments/$token/organize': (200, {...tournament(creator: false), 'organizer': true}),
+      });
+      final state = fakeState(server: server)..user = an();
+      await pumpScreen(
+        tester,
+        const OrganizeTournamentScreen(token: token, organizerToken: 'Zz98Yy76Xx54Ww32'),
+        state: state,
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('Nguyễn An mời bạn cùng nhập tỉ số cho giải này.'), findsOneWidget);
+
+      await tester.tap(find.text('Nhận quyền nhập tỉ số'));
+      await tester.pumpAndSettle();
+      expect(jsonDecode(server.requests.last.body), {'organizer_token': 'Zz98Yy76Xx54Ww32'});
+      expect(find.text('Tổ chức bởi Nguyễn An'), findsOneWidget);
+    });
   });
 }

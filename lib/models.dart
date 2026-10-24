@@ -546,92 +546,147 @@ class GroupShare {
   final DateTime endsAt;
 }
 
-/// An in-house tournament (GD-01..09): one event, a format, a fee per entry; the customer's own entry if any.
+/// A customer's own tournament (GD-01..07): a tool for their group, the venue takes no part. The list
+/// (GET /tournaments) has the summary; the tournament's page (GET /tournaments/:token, and every action's answer)
+/// adds the players, linked bookings, group tables, matches and what the viewer may do.
 class Tournament {
   Tournament.fromJson(Map<String, dynamic> json)
-    : id = json['id'] as int,
+    : token = json['token'] as String,
       title = json['title'] as String? ?? '',
       description = json['description'] as String?,
       event = json['event'] as String? ?? '',
       discipline = json['discipline'] as String? ?? 'singles',
-      gender = json['gender'] as String?,
       playFormat = json['play_format'] as String? ?? 'knockout',
-      level = json['level'] as String?,
-      courts = [for (final court in json['courts'] as List? ?? const []) court as String],
-      startsAt = DateTime.parse(json['starts_at'] as String),
-      endsAt = DateTime.parse(json['ends_at'] as String),
-      registrationClosesAt = DateTime.parse(json['registration_closes_at'] as String),
-      maxEntries = (json['max_entries'] as num?)?.toInt() ?? 0,
-      spotsLeft = (json['spots_left'] as num?)?.toInt() ?? 0,
-      feeVnd = (json['fee_vnd'] as num?)?.toInt() ?? 0,
-      status = json['status'] as String? ?? 'open',
-      registrationOpen = json['registration_open'] == true,
-      myEntry = json['my_entry'] == null ? null : TournamentEntry.fromJson(json['my_entry'] as Map<String, dynamic>),
+      groupSize = (json['group_size'] as num?)?.toInt(),
+      advancePerGroup = (json['advance_per_group'] as num?)?.toInt(),
+      playedOn = json['played_on'] as String?,
+      date = json['date'] as String?,
+      status = json['status'] as String? ?? 'setup',
+      createdBy = json['created_by'] as String? ?? '',
+      creator = json['creator'] == true,
+      sharePath = json['share_path'] as String? ?? '',
+      organizer = json['organizer'] == true,
       champion = json['champion'] as String?,
-      entries = [
-        for (final entry in json['entries'] as List? ?? const [])
-          TournamentSide.fromJson(entry as Map<String, dynamic>),
+      redrawable = json['redrawable'] == true,
+      entries = [for (final entry in json['entries'] as List? ?? const []) TournamentEntry.fromJson(entry)],
+      bookings = [for (final booking in json['bookings'] as List? ?? const []) TournamentBooking.fromJson(booking)],
+      courts = [for (final court in json['courts'] as List? ?? const []) TournamentCourt.fromJson(court)],
+      linkableBookings = [
+        for (final booking in json['linkable_bookings'] as List? ?? const []) TournamentBooking.fromJson(booking),
+      ],
+      organizerPath = json['organizer_path'] as String?,
+      organizers = [
+        for (final organizer in json['organizers'] as List? ?? const []) TournamentOrganizer.fromJson(organizer),
       ],
       groups = [for (final group in json['groups'] as List? ?? const []) TournamentGroup.fromJson(group)],
       matches = [for (final match in json['matches'] as List? ?? const []) TournamentMatch.fromJson(match)];
 
-  final int id;
+  /// The share token, in its link (`/tournaments/<token>`) and the API's paths.
+  final String token;
   final String title;
   final String? description;
 
-  /// "Đôi nam nữ", "Đơn nữ"… in the app's language.
+  /// "Đôi", "Đơn"… in the app's language.
   final String event;
 
-  /// singles, doubles or mixed_doubles; gender: male, female or null (open).
+  /// singles, doubles or mixed_doubles.
   final String discipline;
-  final String? gender;
 
-  /// knockout, groups_knockout or round_robin.
+  /// knockout, groups_knockout (groupSize 3..6, advancePerGroup 1..2) or round_robin.
   final String playFormat;
-  final String? level;
-  final List<String> courts;
-  final DateTime startsAt;
-  final DateTime endsAt;
-  final DateTime registrationClosesAt;
-  final int maxEntries;
-  final int spotsLeft;
-  final int feeVnd;
+  final int? groupSize;
+  final int? advancePerGroup;
 
-  /// open, in_progress, finished or cancelled.
+  /// The day the creator gave ("2026-11-03"), and the day it is played: the earliest linked booking's, else that.
+  final String? playedOn;
+  final String? date;
+
+  /// setup (players typed, no draw yet), in_progress or finished.
   final String status;
-  final bool registrationOpen;
-  final TournamentEntry? myEntry;
 
-  /// Only on the tournament's own page (GET /tournaments/:id).
+  /// The creator's name; whether the viewer created it (sets it up) or helps organize it (enters results).
+  final String createdBy;
+  final bool creator;
+  final bool organizer;
+
+  /// The website's path of its page, to send to friends (the app adds the server's address).
+  final String sharePath;
+
+  // Only on the tournament's page.
   final String? champion;
-  final List<TournamentSide> entries;
+  final bool redrawable;
+  final List<TournamentEntry> entries;
+  final List<TournamentBooking> bookings;
+
+  /// The courts of the linked bookings, to call matches to (organizers only).
+  final List<TournamentCourt> courts;
+
+  /// The creator's own bookings that can be linked to it, `linked` when they are.
+  final List<TournamentBooking> linkableBookings;
+
+  /// The link that makes a friend an organizer, and the friends who are (creator only).
+  final String? organizerPath;
+  final List<TournamentOrganizer> organizers;
   final List<TournamentGroup> groups;
   final List<TournamentMatch> matches;
 
   bool get doubles => discipline != 'singles';
+  bool get setup => status == 'setup';
 
-  /// Gendered events need the partner's gender.
-  bool get byGender => gender != null || discipline == 'mixed_doubles';
+  /// [date] at noon in the venue's time, for a DateTile (the same day whatever the phone's time zone).
+  DateTime? get day => date == null ? null : DateTime.parse('${date}T12:00:00+07:00');
 }
 
-/// The customer's entry (as registrant or partner).
+/// A player (or a pair: [partnerName]) typed by the creator; players need no account.
 class TournamentEntry {
   TournamentEntry.fromJson(Map<String, dynamic> json)
     : id = json['id'] as int,
       name = json['name'] as String? ?? '',
-      status = json['status'] as String? ?? 'pending',
-      amountVnd = (json['amount_vnd'] as num?)?.toInt() ?? 0,
-      canCancel = json['can_cancel'] == true,
-      paymentToken = json['payment_token'] as String?;
+      partnerName = json['partner_name'] as String?,
+      seed = (json['seed'] as num?)?.toInt();
 
   final int id;
   final String name;
+  final String? partnerName;
+  final int? seed;
 
-  /// pending (awaiting the transfer), confirmed or cancelled.
-  final String status;
-  final int amountVnd;
-  final bool canCancel;
-  final String? paymentToken;
+  /// "Hùng / Lan" for a pair.
+  String get displayName => (partnerName ?? '').isEmpty ? name : '$name / $partnerName';
+}
+
+/// A court booking the tournament is played on.
+class TournamentBooking {
+  TournamentBooking.fromJson(Map<String, dynamic> json)
+    : id = json['id'] as int,
+      court = json['court'] as String? ?? '',
+      startsAt = DateTime.parse(json['starts_at'] as String),
+      endsAt = DateTime.parse(json['ends_at'] as String),
+      linked = json['linked'] == true;
+
+  final int id;
+  final String court;
+  final DateTime startsAt;
+  final DateTime endsAt;
+
+  /// Among the creator's linkable bookings: linked to this tournament.
+  final bool linked;
+}
+
+class TournamentCourt {
+  TournamentCourt.fromJson(Map<String, dynamic> json) : id = json['id'] as int, name = json['name'] as String? ?? '';
+
+  final int id;
+  final String name;
+}
+
+/// A friend who joined with the organizer link (enters results).
+class TournamentOrganizer {
+  TournamentOrganizer.fromJson(Map<String, dynamic> json)
+    : userId = json['user_id'] as int,
+      name = json['name'] as String? ?? '';
+
+  final int userId;
+  final String name;
 }
 
 /// A player or pair in the draw.
@@ -689,7 +744,10 @@ class TournamentMatch {
       ],
       walkover = json['walkover'] == true,
       bye = json['bye'] == true,
-      court = json['court'] as String?;
+      court = json['court'] as String?,
+      courtId = (json['court_id'] as num?)?.toInt(),
+      editable = json['editable'] == true,
+      ready = json['ready'] == true;
 
   final int id;
 
@@ -708,8 +766,13 @@ class TournamentMatch {
   final bool walkover;
   final bool bye;
 
-  /// Set once staff call the match to a court.
+  /// The court an organizer called it to.
   final String? court;
+  final int? courtId;
+
+  /// The viewer (an organizer) may enter or correct its result; both sides are known and it is not played yet.
+  final bool editable;
+  final bool ready;
 
   bool get finished => winnerId != null;
 }

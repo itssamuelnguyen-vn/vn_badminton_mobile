@@ -17,7 +17,8 @@ import 'tournaments_screen.dart';
 import 'settings_screen.dart';
 
 /// The four tabs: booking grid, my bookings, open play, account. Also opens the links of the server's emails
-/// (deep_links.dart): the payment page or the booking, after signing in if needed.
+/// (deep_links.dart): the payment page or the booking, after signing in if needed; a tournament's page, and its
+/// organizer link (signed in).
 class HomeShell extends StatefulWidget {
   const HomeShell({super.key});
 
@@ -71,7 +72,7 @@ class HomeShellState extends State<HomeShell> {
     if (link.target == LinkTarget.home) return select(0);
     // A tournament's page is public.
     if (link.target == LinkTarget.tournament) {
-      navigator.push(MaterialPageRoute(builder: (_) => TournamentScreen(id: int.parse(link.value!))));
+      navigator.push(MaterialPageRoute(builder: (_) => TournamentScreen(token: link.value!)));
       return;
     }
     if (!await ensureSignedIn(context) || !mounted) return;
@@ -88,6 +89,12 @@ class HomeShellState extends State<HomeShell> {
         } catch (error) {
           if (mounted) showMessage(context, S.of(context).error(error));
         }
+      case LinkTarget.organize:
+        navigator.push(
+          MaterialPageRoute(
+            builder: (_) => OrganizeTournamentScreen(token: link.value!, organizerToken: link.secret!),
+          ),
+        );
       case LinkTarget.home:
       case LinkTarget.tournament:
         break;

@@ -70,7 +70,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
   /// Giving up before transferring releases the courts or places at once (TT-11).
   Future<void> _cancel(Payment payment) async {
     final s = S.of(context);
-    final label = _cancelLabel(s, payment);
+    final label = payment.purpose == 'tickets' ? s.cancelPlaces : s.cancelBooking;
     final ok = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
@@ -279,7 +279,7 @@ class _PaymentScreenState extends State<PaymentScreen> {
     if (payment.canCancel) ...[
       OutlinedButton.icon(
         icon: const Icon(Icons.cancel_outlined),
-        label: Text(_cancelLabel(s, payment)),
+        label: Text(payment.purpose == 'tickets' ? s.cancelPlaces : s.cancelBooking),
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.rose,
           side: BorderSide(color: AppColors.rose.withValues(alpha: 0.4), width: 1.5),
@@ -328,12 +328,6 @@ class _PaymentScreenState extends State<PaymentScreen> {
         ),
     ];
   }
-
-  String _cancelLabel(S s, Payment payment) => switch (payment.purpose) {
-    'tickets' => s.cancelPlaces,
-    'tournament' => s.cancelEntry,
-    _ => s.cancelBooking,
-  };
 
   Widget _notice(IconData icon, Color color, String text) => SoftCard(
     child: Row(

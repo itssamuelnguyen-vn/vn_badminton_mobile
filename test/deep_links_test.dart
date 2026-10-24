@@ -20,10 +20,23 @@ void main() {
     expect(parse('https://court.example.vn/en/bookings'), const DeepLink(LinkTarget.bookings));
   });
 
-  test("a tournament's page (push notifications of the tournament)", () {
-    expect(parse('https://court.example.vn/tournaments/12'), const DeepLink(LinkTarget.tournament, '12'));
-    expect(parse('https://court.example.vn/tournaments'), const DeepLink(LinkTarget.home));
-    expect(parse('https://court.example.vn/tournaments/x'), const DeepLink(LinkTarget.home));
+  test("a tournament's page and its organizer link (sent by the tournament's creator)", () {
+    expect(
+      parse('https://court.example.vn/tournaments/Ab12Cd34Ef56Gh78'),
+      const DeepLink(LinkTarget.tournament, 'Ab12Cd34Ef56Gh78'),
+    );
+    expect(
+      parse('https://court.example.vn/en/tournaments/Ab12Cd34Ef56Gh78/organize/Zz98Yy76Xx54Ww32'),
+      const DeepLink(LinkTarget.organize, 'Ab12Cd34Ef56Gh78', 'Zz98Yy76Xx54Ww32'),
+    );
+    for (final url in [
+      'https://court.example.vn/tournaments',
+      'https://court.example.vn/tournaments/new',
+      'https://court.example.vn/tournaments/Ab12Cd34Ef56Gh78/edit',
+      'https://court.example.vn/tournaments/Ab12Cd34Ef56Gh78/organize/x',
+    ]) {
+      expect(parse(url), const DeepLink(LinkTarget.home), reason: url);
+    }
   });
 
   test('other pages of the server open the home screen', () {
