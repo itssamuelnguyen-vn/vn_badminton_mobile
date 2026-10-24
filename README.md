@@ -14,5 +14,5 @@ Flutter app (Android first) for the customers of the VN Badminton court booking 
 
 ## Build an APK
 
-`Ctrl+Shift+B` in VS Code (or `tool/build_apk.ps1`) builds `build\apk\vnbadminton-<version>.apk`.
+`Ctrl+Shift+B` in VS Code (or `tool/build_apk.ps1`) builds `build\apk\vnbadminton-<version>-<yyyyMMdd-HHmm>.apk`.
 Steps, timings and troubleshooting: [`docs/build-apk.md`](docs/build-apk.md).
