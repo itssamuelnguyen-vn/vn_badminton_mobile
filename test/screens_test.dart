@@ -299,5 +299,24 @@ void main() {
       expect(jsonDecode(server.requests.last.body), {'organizer_token': 'Zz98Yy76Xx54Ww32'});
       expect(find.text('Tổ chức bởi Nguyễn An'), findsOneWidget);
     });
+
+    testWidgets('the "i" next to the format explains the three formats, the picked one first', (tester) async {
+      final state = fakeState()..user = an();
+      await pumpScreen(tester, const TournamentFormScreen(), state: state);
+      await tester.pumpAndSettle();
+
+      await tester.tap(find.byTooltip('Giải thích các thể thức'));
+      await tester.pumpAndSettle();
+      expect(find.text('Cách thi đấu của từng thể thức'), findsOneWidget);
+      expect(find.textContaining('Hạt giống 1 và 2 nằm ở hai nửa sơ đồ'), findsOneWidget);
+      // The sheet's list is built lazily: scroll down to the scoring, past the group rules.
+      final sheet = find.byType(Scrollable).last;
+      await tester.scrollUntilVisible(
+        find.textContaining('29–29 thì ai được điểm thứ 30 thắng ván'),
+        200,
+        scrollable: sheet,
+      );
+      expect(find.textContaining('ai thắng trận đối đầu xếp trên'), findsWidgets);
+    });
   });
 }

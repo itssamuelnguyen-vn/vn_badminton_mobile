@@ -281,19 +281,32 @@ class _TournamentFormScreenState extends State<TournamentFormScreen> {
                           onChanged: _disciplineEditable ? (value) => setState(() => _discipline = value!) : null,
                         ),
                         const SizedBox(height: 14),
-                        DropdownButtonFormField<String>(
-                          initialValue: _format,
-                          isExpanded: true,
-                          decoration: InputDecoration(
-                            labelText: s.formatTitle,
-                            helperText: _formatEditable ? s.formatHint(_format) : s.formatLocked,
-                            helperMaxLines: 3,
-                          ),
-                          items: [
-                            for (final format in const ['knockout', 'groups_knockout', 'round_robin'])
-                              DropdownMenuItem(value: format, child: Text(s.formatLabel(format))),
+                        // The "i" explains every format in detail (BWF rules), like the website's tooltips.
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: DropdownButtonFormField<String>(
+                                initialValue: _format,
+                                isExpanded: true,
+                                decoration: InputDecoration(
+                                  labelText: s.formatTitle,
+                                  helperText: _formatEditable ? s.formatHint(_format) : s.formatLocked,
+                                  helperMaxLines: 3,
+                                ),
+                                items: [
+                                  for (final format in const ['knockout', 'groups_knockout', 'round_robin'])
+                                    DropdownMenuItem(value: format, child: Text(s.formatLabel(format))),
+                                ],
+                                onChanged: _formatEditable ? (value) => setState(() => _format = value!) : null,
+                              ),
+                            ),
+                            IconButton(
+                              tooltip: s.formatHelpTooltip,
+                              icon: const Icon(Icons.info_outline_rounded, color: AppColors.primaryDark),
+                              onPressed: () => showFormatHelp(context, _format),
+                            ),
                           ],
-                          onChanged: _formatEditable ? (value) => setState(() => _format = value!) : null,
                         ),
                         if (_format == 'groups_knockout') ...[
                           const SizedBox(height: 14),
@@ -1366,4 +1379,56 @@ class _OrganizeTournamentScreenState extends State<OrganizeTournamentScreen> {
       ),
     );
   }
+}
+
+/// The three formats explained in detail (BWF rules), the one picked first.
+Future<void> showFormatHelp(BuildContext context, String picked) {
+  final s = S.of(context);
+  final formats = ['knockout', 'groups_knockout', 'round_robin']
+    ..sort((a, b) => (a == picked ? 0 : 1) - (b == picked ? 0 : 1));
+  return showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    showDragHandle: true,
+    builder: (context) => DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.75,
+      maxChildSize: 0.95,
+      builder: (context, controller) => ListView(
+        controller: controller,
+        padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
+        children: [
+          Text(s.formatHelp, style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w700)),
+          for (final format in formats) ...[
+            const SizedBox(height: 18),
+            Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    s.formatLabel(format),
+                    style: const TextStyle(fontSize: 16, fontWeight: FontWeight.w700, color: AppColors.primaryDark),
+                  ),
+                ),
+                if (format == picked) const Icon(Icons.check_circle_rounded, color: AppColors.primaryDark, size: 20),
+              ],
+            ),
+            const SizedBox(height: 6),
+            for (final point in s.formatDetails(format))
+              Padding(
+                padding: const EdgeInsets.only(bottom: 6),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Text('•  '),
+                    Expanded(child: Text(point, style: const TextStyle(height: 1.4))),
+                  ],
+                ),
+              ),
+          ],
+          const Divider(height: 28),
+          Text(s.scoringRules, style: const TextStyle(color: AppColors.muted, height: 1.4)),
+        ],
+      ),
+    ),
+  );
 }

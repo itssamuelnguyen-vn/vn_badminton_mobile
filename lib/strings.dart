@@ -526,6 +526,69 @@ class S {
       'Lose and you are out. Seeds are placed apart and get the byes.',
     ),
   };
+  // The detailed explanation of each format (the "i" next to the format, as the website's tooltips), BWF rules.
+  String get formatHelp => _('Cách thi đấu của từng thể thức', 'How each format works');
+  String get formatHelpTooltip => _('Giải thích các thể thức', 'Explain the formats');
+  List<String> formatDetails(String format) => switch (format) {
+    'groups_knockout' => [
+      _(
+        'Vòng bảng: chia bảng 3–6 người/cặp, hạt giống được rải đều theo kiểu rắn bò (1→A, 2→B, …, rồi quay lại từ bảng cuối). Trong bảng ai cũng gặp ai một lần.',
+        'Groups: groups of 3–6 players or pairs, seeds spread snake-wise (1→A, 2→B, …, then back from the last group). Everyone in a group meets everyone once.',
+      ),
+      _(
+        'Xếp hạng trong bảng theo thể lệ vòng tròn của BWF: số trận thắng; hai người bằng trận thắng → ai thắng trận đối đầu xếp trên; ba người trở lên bằng nhau → hiệu số ván, rồi hiệu số điểm (tính trên mọi trận trong bảng), bước nào chỉ còn hai người bằng nhau thì xét trận đối đầu; vẫn bằng → theo hạt giống.',
+        'Group ranking follows the BWF round robin rules: matches won; two tied → the winner of their match ranks higher; three or more tied → game difference, then point difference (over all group matches), going back to the match between them whenever only two are left tied; still tied → by seed.',
+      ),
+      _(
+        'Vòng trong: 1 hoặc 2 người đứng đầu mỗi bảng vào vòng loại trực tiếp, tự tạo khi vòng bảng đấu xong. Người cùng bảng không gặp lại nhau ngay vòng đầu (khi xếp được).',
+        'Knockout: the top 1 or 2 of each group go on to a knockout, made by itself once the groups are over. Group-mates do not meet again in its first round (when possible).',
+      ),
+      _(
+        'Thắng do đối thủ bỏ cuộc tính một trận thắng, không cộng ván hay điểm.',
+        'A walkover counts as a match won, with no games or points.',
+      ),
+    ],
+    'round_robin' => [
+      _(
+        'Mọi người/cặp gặp nhau đúng một lần; số lẻ thì mỗi lượt có một người nghỉ. Không có vòng loại trực tiếp, nhà vô địch là người đứng đầu bảng.',
+        'Everyone meets everyone exactly once; with an odd number, one rests each round. No knockout, the top of the table is the champion.',
+      ),
+      _(
+        'Xếp hạng theo thể lệ vòng tròn của BWF: số trận thắng; hai người bằng trận thắng → ai thắng trận đối đầu xếp trên; ba người trở lên bằng nhau → hiệu số ván, rồi hiệu số điểm, bước nào chỉ còn hai người bằng nhau thì xét trận đối đầu; vẫn bằng → theo hạt giống.',
+        'Ranking follows the BWF round robin rules: matches won; two tied → the winner of their match ranks higher; three or more tied → game difference, then point difference, going back to the match between them whenever only two are left tied; still tied → by seed.',
+      ),
+      _(
+        'Tối đa 10 người/cặp (45 trận), vì n người cần n × (n − 1) / 2 trận. Ai cũng được đánh nhiều trận.',
+        'At most 10 players or pairs (45 matches), as n players need n × (n − 1) / 2 matches. Everyone plays a lot.',
+      ),
+      _(
+        'Thắng do đối thủ bỏ cuộc tính một trận thắng, không cộng ván hay điểm.',
+        'A walkover counts as a match won, with no games or points.',
+      ),
+    ],
+    _ => [
+      _(
+        'Thua một trận là bị loại; người thắng vào vòng sau cho tới trận chung kết. Không có trận tranh hạng ba.',
+        'Lose one match and you are out; winners move on until the final. There is no third-place match.',
+      ),
+      _(
+        'Sơ đồ có 2, 4, 8, 16, 32 hoặc 64 vị trí. Thiếu người thì các hạt giống cao nhất được miễn đấu (bye) vòng đầu và vào thẳng vòng sau, như cách BWF xếp sơ đồ.',
+        'The draw has 2, 4, 8, 16, 32 or 64 places. When some are empty, the top seeds get byes and go straight to the next round, as in BWF draws.',
+      ),
+      _(
+        'Hạt giống 1 và 2 nằm ở hai nửa sơ đồ nên chỉ có thể gặp nhau ở chung kết; hạt giống 3 và 4 nằm ở hai phần tư còn lại. Những người không phải hạt giống được bốc thăm ngẫu nhiên.',
+        'Seeds 1 and 2 are in opposite halves, so they can only meet in the final; seeds 3 and 4 are in the other two quarters. Unseeded players are drawn at random.',
+      ),
+      _(
+        'Hợp với giải đông người, ít thời gian (n người/cặp chỉ cần n − 1 trận).',
+        'Good for many players and little time (n players or pairs need only n − 1 matches).',
+      ),
+    ],
+  };
+  String get scoringRules => _(
+    'Mỗi trận theo luật BWF: thắng 2 trong 3 ván; ván 21 điểm, mỗi pha cầu đều tính điểm; 20–20 thì phải hơn 2 điểm, 29–29 thì ai được điểm thứ 30 thắng ván. Nhóm có thể tự thoả thuận chơi ngắn hơn (1 ván, ván 11 hoặc 15 điểm): ở đây nhập 1–3 ván, bên thắng nhiều ván hơn thắng trận.',
+    'Each match follows the BWF Laws: best of 3 games; 21 points a game, every rally scores; at 20-all a 2-point lead is needed, at 29-all the 30th point wins. Groups may agree on shorter play (1 game, games to 11 or 15): enter 1–3 games here, whoever wins more games wins the match.',
+  );
   String tournamentStatus(String status) => switch (status) {
     'in_progress' => _('Đang thi đấu', 'In progress'),
     'finished' => _('Đã kết thúc', 'Finished'),
