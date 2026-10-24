@@ -629,10 +629,8 @@ class _ScheduleScreenState extends State<ScheduleScreen> {
     final Widget? content = picked
         ? const Icon(Icons.check_rounded, color: Colors.white, size: 20)
         : switch (slot.state) {
-            'available' => Text(
-              shortVnd(slot.priceVnd),
-              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: AppColors.primaryDark),
-            ),
+            // No price in the cells: the bar below shows the total of the picked ones.
+            'available' => null,
             'mine' => const Icon(Icons.person_rounded, color: AppColors.indigo, size: 18),
             'held' => const Icon(Icons.hourglass_bottom_rounded, color: AppColors.amber, size: 16),
             _ => null,

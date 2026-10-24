@@ -24,4 +24,10 @@ void main() {
     expect(s.error(ApiError(0, 'network')), s.networkError);
     expect(s.error(StateError('x')), s.unknownError);
   });
+
+  test("a cancelled booking's reason is a sentence, never the server's code", () {
+    expect(const S('vi').cancellationReason('payment_expired'), 'Hết hạn chuyển khoản');
+    expect(const S('en').cancellationReason('venue_fault'), 'A problem at the venue');
+    expect(const S('vi').cancellationReason('something_new'), isNull, reason: 'unknown codes are not shown');
+  });
 }

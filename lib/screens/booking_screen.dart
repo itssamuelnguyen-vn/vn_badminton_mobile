@@ -353,7 +353,8 @@ class _BookingScreenState extends State<BookingScreen> {
                         ].join(' · '),
                       ),
                       if ((booking.note ?? '').isNotEmpty) InfoRow(s.note, booking.note!),
-                      if ((booking.cancellationReason ?? '').isNotEmpty) InfoRow('', booking.cancellationReason!),
+                      if (s.cancellationReason(booking.cancellationReason ?? '') case final reason?)
+                        InfoRow(s.cancellationReasonTitle, reason),
                     ],
                   ),
                 ),
