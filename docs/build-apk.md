@@ -1,6 +1,6 @@
 # Build file APK
 
-Cập nhật: 21/10/2026
+Cập nhật: 24/10/2026
 
 Dùng khi cần một file APK để cài lên điện thoại (gửi cho người khác, cài không cần cắm cáp).
 Khi chỉ chạy thử trên máy mình thì vẫn dùng `F5` / `flutter run` như bình thường.
@@ -15,22 +15,23 @@ Khi chỉ chạy thử trên máy mình thì vẫn dùng `F5` / `flutter run` nh
 3. **Chờ.** Lần đầu (hoặc sau `flutter clean`) khoảng **7 phút**, các lần sau khoảng **2 phút**.
    Cuối cùng terminal in ra:
    ```
-   APK: D:\dev\vn_badminton_mobile\build\apk\vnbadminton-0.6.0.apk
+   APK: D:\dev\vn_badminton_mobile\build\apk\vnbadminton-0.7.0-20261024-1830.apk
    Server: https://....trycloudflare.com
    ```
    Xem lại dòng **Server** cho đúng địa chỉ muốn dùng.
-4. **Cài.** Chép `build\apk\vnbadminton-<phiên bản>.apk` sang điện thoại, mở file, cho phép
+4. **Cài.** Chép `build\apk\vnbadminton-<phiên bản>-<ngày giờ>.apk` sang điện thoại, mở file, cho phép
    "Cài ứng dụng không rõ nguồn gốc". Cài đè lên bản cũ được (cùng khoá ký).
 
 ## Các file tạo ra (`build\apk\`)
 
 | File                                | Dùng cho                                     |
 |-------------------------------------|----------------------------------------------|
-| `vnbadminton-<phiên bản>.apk`        | Gần như mọi điện thoại hiện nay (arm64)      |
-| `vnbadminton-<phiên bản>-arm32.apk`  | Điện thoại Android rất cũ (32-bit)           |
-| `vnbadminton-<phiên bản>-x86_64.apk` | Máy ảo (emulator)                            |
+| `vnbadminton-<phiên bản>-<ngày giờ>.apk`        | Gần như mọi điện thoại hiện nay (arm64)      |
+| `vnbadminton-<phiên bản>-<ngày giờ>-arm32.apk`  | Điện thoại Android rất cũ (32-bit)           |
+| `vnbadminton-<phiên bản>-<ngày giờ>-x86_64.apk` | Máy ảo (emulator)                            |
 
-Phiên bản lấy từ dòng `version:` của `pubspec.yaml` (phần trước dấu `+`).
+Phiên bản lấy từ dòng `version:` của `pubspec.yaml` (phần trước dấu `+`); **ngày giờ** là lúc build (`yyyyMMdd-HHmm`),
+nên nhiều lần build cùng phiên bản không đè lên nhau. Các file cũ vẫn nằm trong `build\apk\`, xoá bớt khi không cần.
 Khi gửi bản mới cho khách: tăng `version` và thêm mục vào `releases` trong `lib/screens/whats_new_screen.dart`.
 
 ## Khi có lỗi
