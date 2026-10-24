@@ -33,10 +33,6 @@ String isoDateLabel(String isoDate) => DateFormat('dd/MM/yyyy').format(DateTime.
 
 String vnd(int amount) => '${NumberFormat.decimalPattern('vi').format(amount)} đ';
 
-/// 40000 -> "40k", for the small price in the grid cells.
-String shortVnd(int amount) =>
-    amount >= 1000 && amount % 1000 == 0 ? '${amount ~/ 1000}k' : NumberFormat.decimalPattern('vi').format(amount);
-
 String countdown(Duration left) {
   if (left.isNegative) return '00:00';
   final minutes = left.inMinutes.toString().padLeft(2, '0');

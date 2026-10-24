@@ -202,6 +202,19 @@ class S {
     _ => status,
   };
 
+  // Why a booking was cancelled (the server's codes, see Booking and BookingSeries); null for an unknown one.
+  String? cancellationReason(String reason) => switch (reason) {
+    'payment_expired' => _('Hết hạn chuyển khoản', 'The transfer did not arrive in time'),
+    'payment_cancelled' => _('Bạn đã huỷ trước khi chuyển khoản', 'You cancelled before transferring'),
+    'payment_replaced' => _('Đã thay bằng lần đặt mới', 'Replaced by a newer booking'),
+    'venue_fault' => _('Sự cố của sân', 'A problem at the venue'),
+    'series_skip' => _('Báo nghỉ buổi này', 'You skipped this session'),
+    'venue_closed' => _('Sân nghỉ', 'The venue was closed'),
+    'series_ended' => _('Lịch cố định đã kết thúc', 'The weekly booking ended'),
+    _ => null,
+  };
+  String get cancellationReasonTitle => _('Lý do huỷ', 'Reason');
+
   String paymentStatus(String status) => switch (status) {
     'unpaid' => _('Chưa thanh toán', 'Unpaid'),
     'paid' => _('Đã thanh toán', 'Paid'),

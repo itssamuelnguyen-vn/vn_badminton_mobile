@@ -30,9 +30,6 @@ void main() {
   test('amounts in VND', () {
     expect(vnd(208000), '208.000 đ');
     expect(vnd(0), '0 đ');
-    expect(shortVnd(40000), '40k');
-    expect(shortVnd(42500), '42.500');
-    expect(shortVnd(500), '500');
   });
 
   test('minutes since midnight and the countdown', () {
