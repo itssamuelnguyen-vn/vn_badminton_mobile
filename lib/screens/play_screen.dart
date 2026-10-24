@@ -8,9 +8,10 @@ import '../theme.dart';
 import '../widgets.dart';
 import 'auth_screens.dart';
 import 'payment_screen.dart';
+import 'tournaments_screen.dart';
 
-/// The "Giao lưu" tab (GL-01..03): coming open play sessions, places left, the customer's places; joining one
-/// (how many players) opens the transfer page.
+/// The "Giao lưu" tab: open play (GL-01..03: coming sessions, places left, the customer's places; joining one
+/// opens the transfer page) and, with the switch in the header, the customer's own tournaments (TournamentList).
 class PlayScreen extends StatefulWidget {
   const PlayScreen({super.key});
 
@@ -22,6 +23,7 @@ class _PlayScreenState extends State<PlayScreen> {
   List<PlaySession>? _sessions;
   Object? _error;
   int? _userId;
+  bool _tournaments = false;
 
   @override
   void didChangeDependencies() {
@@ -149,9 +151,15 @@ class _PlayScreenState extends State<PlayScreen> {
     return Scaffold(
       body: Column(
         children: [
-          GradientHeader(title: s.playTitle, subtitle: s.playIntro),
+          GradientHeader(
+            title: _tournaments ? s.tabTournaments : s.playTitle,
+            subtitle: _tournaments ? s.tournamentsIntro : s.playIntro,
+            child: _switch(s),
+          ),
           Expanded(
-            child: sessions == null
+            child: _tournaments
+                ? const TournamentList()
+                : sessions == null
                 ? (_error != null
                       ? ErrorView(message: s.error(_error!), onRetry: _load)
                       : const Center(child: CircularProgressIndicator()))
@@ -170,6 +178,39 @@ class _PlayScreenState extends State<PlayScreen> {
       ),
     );
   }
+
+  /// Open play | Tournaments.
+  Widget _switch(S s) => Container(
+    margin: const EdgeInsets.only(top: 12, right: 12),
+    padding: const EdgeInsets.all(4),
+    decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.18), borderRadius: BorderRadius.circular(99)),
+    child: Row(
+      children: [
+        for (final (tournaments, label) in [(false, s.tabPlay), (true, s.tabTournaments)])
+          Expanded(
+            child: GestureDetector(
+              onTap: () => setState(() => _tournaments = tournaments),
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 180),
+                padding: const EdgeInsets.symmetric(vertical: 8),
+                decoration: BoxDecoration(
+                  color: _tournaments == tournaments ? Colors.white : Colors.transparent,
+                  borderRadius: BorderRadius.circular(99),
+                ),
+                child: Text(
+                  label,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w800,
+                    color: _tournaments == tournaments ? AppColors.primaryDark : Colors.white,
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    ),
+  );
 
   Widget _card(S s, PlaySession session) {
     final locale = AppScope.of(context).locale;
