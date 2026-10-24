@@ -1,8 +1,9 @@
 # Link trong email mở thẳng app (Android App Links)
 
-Cập nhật: 21/10/2026
+Cập nhật: 24/10/2026
 
-Email của sân có link `https://<máy chủ>/payments/<mã>` và `https://<máy chủ>/bookings/<mã>` (cả `/en/...`).
+Email của sân có link `https://<máy chủ>/payments/<mã>` và `https://<máy chủ>/bookings/<mã>` (cả `/en/...`); khách gửi
+cho nhau link giải đấu `https://<máy chủ>/tournaments/<mã>` và link nhập tỉ số `.../tournaments/<mã>/organize/<mã>`.
 Khi app đã cài và link đã được **xác minh**, Android mở thẳng app thay vì trình duyệt:
 
 | Link                          | Mở trong app                     |
@@ -10,6 +11,8 @@ Khi app đã cài và link đã được **xác minh**, Android mở thẳng app
 | `/payments/<token>`           | Màn chuyển khoản                 |
 | `/bookings/<mã>`              | Chi tiết lượt đặt                |
 | `/bookings`                   | Tab Sân đã đặt                   |
+| `/tournaments/<mã>`           | Trang giải (không cần đăng nhập) |
+| `/tournaments/<mã>/organize/<mã>` | Nhận quyền nhập tỉ số        |
 | link khác của máy chủ         | Màn hình chính                   |
 
 Chưa đăng nhập thì app mở màn đăng nhập trước. Code: `lib/deep_links.dart` (đọc link, gói `app_links`),

@@ -7,27 +7,32 @@ import 'api.dart';
 
 /// Where a link of the server's emails or a push notification leads in the app (Android App Links, see
 /// docs/app-links.md; push.dart).
-enum LinkTarget { payment, booking, bookings, home }
+enum LinkTarget { payment, booking, bookings, tournament, organize, home }
 
 class DeepLink {
-  const DeepLink(this.target, [this.value]);
+  const DeepLink(this.target, [this.value, this.secret]);
 
   final LinkTarget target;
 
-  /// The payment token or the booking code.
+  /// The payment token, the booking code or the tournament's share token.
   final String? value;
 
-  @override
-  bool operator ==(Object other) => other is DeepLink && other.target == target && other.value == value;
+  /// The organizer token of a tournament's organizer link.
+  final String? secret;
 
   @override
-  int get hashCode => Object.hash(target, value);
+  bool operator ==(Object other) =>
+      other is DeepLink && other.target == target && other.value == value && other.secret == secret;
 
   @override
-  String toString() => 'DeepLink($target, $value)';
+  int get hashCode => Object.hash(target, value, secret);
+
+  @override
+  String toString() => 'DeepLink($target, $value, $secret)';
 }
 
-/// The web page a link opens, as a screen of the app: `/payments/<token>`, `/bookings/<code>` and `/bookings`,
+/// The web page a link opens, as a screen of the app: `/payments/<token>`, `/bookings/<code>`, `/bookings`, a
+/// tournament's page `/tournaments/<token>` and its organizer link `/tournaments/<token>/organize/<organizer token>`,
 /// with or without the /en prefix of the English pages. Any other page of the server opens the home screen; links
 /// to another host are ignored (null).
 DeepLink? parseDeepLink(Uri uri, {String? host}) {
@@ -43,6 +48,14 @@ DeepLink? parseDeepLink(Uri uri, {String? host}) {
     return DeepLink(LinkTarget.booking, segments[1]);
   }
   if (segments.length == 1 && segments[0] == 'bookings') return const DeepLink(LinkTarget.bookings);
+  // Tournaments' tokens are letters and digits; /tournaments/new and the like are web pages only.
+  final token = RegExp(r'^[A-Za-z0-9]{16,}$');
+  if (segments.length >= 2 && segments[0] == 'tournaments' && token.hasMatch(segments[1])) {
+    if (segments.length == 2) return DeepLink(LinkTarget.tournament, segments[1]);
+    if (segments.length == 4 && segments[2] == 'organize' && token.hasMatch(segments[3])) {
+      return DeepLink(LinkTarget.organize, segments[1], segments[3]);
+    }
+  }
   return const DeepLink(LinkTarget.home);
 }
 

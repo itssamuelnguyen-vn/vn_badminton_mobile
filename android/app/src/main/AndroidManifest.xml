@@ -44,6 +44,8 @@
                 <data android:pathPrefix="/en/bookings/"/>
                 <data android:pathPrefix="/payments/"/>
                 <data android:pathPrefix="/en/payments/"/>
+                <data android:pathPrefix="/tournaments/"/>
+                <data android:pathPrefix="/en/tournaments/"/>
             </intent-filter>
             <!-- The links are handled by app_links (lib/deep_links.dart), not by Flutter's router. -->
             <meta-data android:name="flutter_deeplinking_enabled" android:value="false"/>

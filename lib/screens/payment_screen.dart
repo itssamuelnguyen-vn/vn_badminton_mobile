@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
+import '../api.dart';
 import '../app_state.dart';
 import '../format.dart';
 import '../models.dart';
@@ -25,6 +26,7 @@ class PaymentScreen extends StatefulWidget {
 class _PaymentScreenState extends State<PaymentScreen> {
   late Payment? _payment = widget.initial;
   Object? _error;
+  bool _busy = false;
   Timer? _tick;
   Timer? _poll;
 
@@ -47,17 +49,55 @@ class _PaymentScreenState extends State<PaymentScreen> {
     try {
       final payment = Payment.fromJson(await AppScope.read(context).api.get('/payments/${widget.token}'));
       if (!mounted) return;
-      setState(() {
-        _payment = payment;
-        _error = null;
-      });
-      if (payment.status != 'awaiting') {
-        _poll?.cancel();
-        _tick?.cancel();
-      }
+      _show(payment);
     } catch (error) {
       // A missed check is retried by the next one; only shown when there is nothing else to show.
       if (mounted && _payment == null) setState(() => _error = error);
+    }
+  }
+
+  void _show(Payment payment) {
+    setState(() {
+      _payment = payment;
+      _error = null;
+    });
+    if (payment.status != 'awaiting') {
+      _poll?.cancel();
+      _tick?.cancel();
+    }
+  }
+
+  /// Giving up before transferring releases the courts or places at once (TT-11).
+  Future<void> _cancel(Payment payment) async {
+    final s = S.of(context);
+    final label = payment.purpose == 'tickets' ? s.cancelPlaces : s.cancelBooking;
+    final ok = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text(label),
+        content: Text(s.cancelPaymentConfirm),
+        actions: [
+          TextButton(onPressed: () => Navigator.pop(context, false), child: Text(s.keep)),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: Theme.of(context).colorScheme.error),
+            onPressed: () => Navigator.pop(context, true),
+            child: Text(label),
+          ),
+        ],
+      ),
+    );
+    if (ok != true || !mounted) return;
+
+    setState(() => _busy = true);
+    try {
+      final json = await AppScope.read(context).api.patch('/payments/${widget.token}/cancel');
+      if (!mounted) return;
+      _show(Payment.fromJson(json));
+      showMessage(context, s.paymentCancelledNow);
+    } on ApiError catch (error) {
+      if (mounted) showMessage(context, s.error(error));
+    } finally {
+      if (mounted) setState(() => _busy = false);
     }
   }
 
@@ -236,6 +276,25 @@ class _PaymentScreenState extends State<PaymentScreen> {
       ],
     ),
     const SizedBox(height: 8),
+    if (payment.canCancel) ...[
+      OutlinedButton.icon(
+        icon: const Icon(Icons.cancel_outlined),
+        label: Text(payment.purpose == 'tickets' ? s.cancelPlaces : s.cancelBooking),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.rose,
+          side: BorderSide(color: AppColors.rose.withValues(alpha: 0.4), width: 1.5),
+        ),
+        onPressed: _busy ? null : () => _cancel(payment),
+      ),
+      Padding(
+        padding: const EdgeInsets.only(top: 6, bottom: 8),
+        child: Text(
+          s.cancelPaymentHint,
+          textAlign: TextAlign.center,
+          style: const TextStyle(color: AppColors.muted, fontSize: 13),
+        ),
+      ),
+    ],
   ];
 
   List<Widget> _bookings(Payment payment) {

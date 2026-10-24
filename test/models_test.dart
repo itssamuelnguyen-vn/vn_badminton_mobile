@@ -89,6 +89,135 @@ void main() {
     expect(payment.bookings.single.code, 'K7MPX2QA');
   });
 
+  test("a tournament's page: players, bookings, the creator's tools, group table and matches", () {
+    final tournament = Tournament.fromJson({
+      'token': 'Ab12Cd34Ef56Gh78',
+      'title': 'Giải tháng 11',
+      'event': 'Đôi',
+      'discipline': 'doubles',
+      'play_format': 'groups_knockout',
+      'group_size': 4,
+      'advance_per_group': 2,
+      'played_on': null,
+      'date': '2026-11-01',
+      'status': 'in_progress',
+      'created_by': 'Nguyễn An',
+      'creator': true,
+      'organizer': true,
+      'share_path': '/tournaments/Ab12Cd34Ef56Gh78',
+      'champion': null,
+      'redrawable': true,
+      'entries': [
+        {'id': 3, 'name': 'Hùng', 'partner_name': 'Lan', 'seed': 1},
+        {'id': 4, 'name': 'Minh', 'partner_name': null, 'seed': null},
+      ],
+      'bookings': [
+        {'id': 8, 'court': 'Sân 2', 'starts_at': '2026-11-01T08:00:00+07:00', 'ends_at': '2026-11-01T10:00:00+07:00'},
+      ],
+      'courts': [
+        {'id': 2, 'name': 'Sân 2'},
+      ],
+      'linkable_bookings': [
+        {
+          'id': 8,
+          'court': 'Sân 2',
+          'starts_at': '2026-11-01T08:00:00+07:00',
+          'ends_at': '2026-11-01T10:00:00+07:00',
+          'linked': true,
+        },
+      ],
+      'organizer_path': '/tournaments/Ab12Cd34Ef56Gh78/organize/Zz98Yy76Xx54Ww32',
+      'organizers': [
+        {'user_id': 5, 'name': 'Lê Chi'},
+      ],
+      'groups': [
+        {
+          'number': 2,
+          'rows': [
+            {
+              'entry': {'id': 3, 'name': 'Hùng / Lan'},
+              'played': 2,
+              'won': 1,
+              'lost': 1,
+              'games_for': 3,
+              'games_against': 2,
+              'point_difference': -4,
+            },
+          ],
+        },
+      ],
+      'matches': [
+        {
+          'id': 9,
+          'stage': 'group',
+          'group': 2,
+          'round': 1,
+          'round_name': 'Vòng 1',
+          'position': 1,
+          'a': {'id': 3, 'name': 'Hùng / Lan'},
+          'b': {'id': 4, 'name': 'Minh'},
+          'winner_id': null,
+          'scores': [
+            [21, 19],
+          ],
+          'walkover': false,
+          'bye': false,
+          'court': 'Sân 2',
+          'court_id': 2,
+          'called_at': '2026-11-01T08:05:00+07:00',
+          'editable': true,
+          'ready': true,
+        },
+      ],
+    });
+
+    expect(tournament.doubles, isTrue);
+    expect(tournament.setup, isFalse);
+    expect(tournament.day, DateTime.utc(2026, 11, 1, 5));
+    expect([tournament.creator, tournament.organizer, tournament.redrawable], [true, true, true]);
+    expect(tournament.entries.map((entry) => entry.displayName), ['Hùng / Lan', 'Minh']);
+    expect(tournament.entries.first.seed, 1);
+    expect(tournament.bookings.single.court, 'Sân 2');
+    expect(tournament.courts.single.id, 2);
+    expect(tournament.linkableBookings.single.linked, isTrue);
+    expect(tournament.organizers.single.userId, 5);
+    expect(tournament.groups.single.letter, 'B');
+    expect(tournament.groups.single.rows.single.pointDifference, -4);
+    final match = tournament.matches.single;
+    expect(
+      [match.a?.name, match.b?.name, match.finished, match.scores, match.court, match.courtId, match.editable],
+      [
+        'Hùng / Lan',
+        'Minh',
+        false,
+        [
+          [21, 19],
+        ],
+        'Sân 2',
+        2,
+        true,
+      ],
+    );
+  });
+
+  test('a tournament in the list: the summary only, nothing to do', () {
+    final tournament = Tournament.fromJson({
+      'token': 'Ab12Cd34Ef56Gh78',
+      'title': 'Giải đơn',
+      'event': 'Đơn',
+      'discipline': 'singles',
+      'play_format': 'knockout',
+      'date': null,
+      'status': 'setup',
+      'created_by': 'Nguyễn An',
+      'creator': false,
+      'share_path': '/tournaments/Ab12Cd34Ef56Gh78',
+    });
+    expect([tournament.doubles, tournament.setup, tournament.day, tournament.organizer], [false, true, null, false]);
+    expect([tournament.entries, tournament.matches, tournament.organizers], [isEmpty, isEmpty, isEmpty]);
+    expect(tournament.organizerPath, isNull);
+  });
+
   test('the venue with its policy, courts and products; defaults when missing', () {
     final venue = Venue.fromJson({
       'name': 'VN Badminton',
